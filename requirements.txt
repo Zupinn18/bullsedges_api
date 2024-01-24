@@ -1,0 +1,8 @@
+dash
+pymongo
+streamlit
+numpy
+pandas
+pya3
+gunicorn
+ta

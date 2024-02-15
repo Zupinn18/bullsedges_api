@@ -28,7 +28,7 @@ from ta.utils import dropna
 # Replace these with your actual MongoDB connection details
 MONGO_CONNECTION_STRING = "mongodb://localhost:27017/"
 DB_NAME = "banknifty"
-COLLECTION_NAME = "26009CE_15"
+COLLECTION_NAME = "26009"
 
 client = MongoClient(MONGO_CONNECTION_STRING)
 db = client[DB_NAME]
@@ -53,9 +53,9 @@ unsubscribe_list = []
 data_list = []  # List to store the received data
 df = pd.DataFrame(columns=["timestamp", "lp"])  # Initialize an empty DataFrame for storing the data
 # File paths for saving data and graph
-data_file_path = "55811CE.csv"
+data_file_path = "26009.csv"
 
-graph_file_path = "55811CE.html"
+graph_file_path = "26009.html"
 
 # Check if the data file exists
 if os.path.exists(data_file_path):

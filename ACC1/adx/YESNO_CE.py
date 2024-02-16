@@ -419,9 +419,9 @@ def calculate_current_trend_lines(data):
     return trend_lines, buy_signals, sell_signals
 
 def calculate_adx(df):
-    df['adx'] = ta.trend.ADXIndicator(df['high'], df['low'], df['close'], window=5, fillna=True).adx()
-    df['di_plus'] = ta.trend.ADXIndicator(df['high'], df['low'], df['close'], window=5, fillna=True).adx_pos()
-    df['di_minus'] = ta.trend.ADXIndicator(df['high'], df['low'], df['close'], window=5, fillna=True).adx_neg()
+    df['adx'] = ta.trend.ADXIndicator(df['high'], df['low'], df['close'], window=14, fillna=True).adx()
+    df['di_plus'] = ta.trend.ADXIndicator(df['high'], df['low'], df['close'], window=14, fillna=True).adx_pos()
+    df['di_minus'] = ta.trend.ADXIndicator(df['high'], df['low'], df['close'], window=14, fillna=True).adx_neg()
 
     return df
 app = dash.Dash(__name__)
@@ -490,7 +490,7 @@ def update_graph_callback(n, relayoutData, selected_timeframe, selected_candle_t
     if 'xaxis.range' in relayoutData:
         xaxis_range = relayoutData['xaxis.range']
     else:
-        xaxis_range = [df.index[-1] - pd.Timedelta(minutes=60), df.index[-1]]
+        xaxis_range = [df.index[-1] - pd.Timedelta(minutes=4320), df.index[-1]]
 
     # Filter data based on xaxis range
     filtered_data = df[(df.index >= xaxis_range[0]) & (df.index <= xaxis_range[1])]
@@ -546,10 +546,6 @@ def update_graph_callback(n, relayoutData, selected_timeframe, selected_candle_t
                                   template='plotly')
 
     return normal_candlestick_fig, heikin_ashi_fig, adx_fig
-
-
-if __name__ == '__main__':
-    app.run_server(debug=True)
 
 
 if __name__ == '__main__':

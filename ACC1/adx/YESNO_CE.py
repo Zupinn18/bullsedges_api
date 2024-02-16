@@ -533,12 +533,16 @@ def update_graph_callback(n, relayoutData, selected_timeframe, selected_candle_t
         heikin_ashi_fig = go.Figure()
 
     # Create ADX figure
-    adx_fig = go.Figure(data=[go.Scatter(x=adx_data.index, y=adx_data['adx'], mode='lines', name='ADX')])
-    adx_fig.add_trace(go.Scatter(x=resampled_data.index, y=resampled_data['di_plus'], mode='lines', name='+DI',
-                                 line=dict(color='green', width=2)))
+    # adx_fig = go.Figure(data=[go.Scatter(x=adx_data.index, y=adx_data['adx'], mode='lines', name='ADX')])
+    # Add +DI trace
+    adx_fig = go.Figure()
+    adx_fig.add_trace(go.Scatter(x=adx_data.index, y=adx_data['adx'], mode='lines', name='ADX'))
 
-    adx_fig.add_trace(go.Scatter(x=resampled_data.index, y=resampled_data['di_minus'], mode='lines', name='-DI',
-                                 line=dict(color='red', width=2)))
+    adx_fig.add_trace(go.Scatter(x=adx_data.index, y=adx_data['di_plus'], mode='lines', name='+DI'))
+
+    # Add -DI trace
+    adx_fig.add_trace(go.Scatter(x=adx_data.index, y=adx_data['di_minus'], mode='lines', name='-DI'))
+
     adx_fig.update_xaxes(type='category', tickformat='%H:%M')
     adx_fig.update_layout(title=f'Average Directional Index (ADX) ({selected_timeframe})',
                                   xaxis_title='Time',
@@ -546,6 +550,8 @@ def update_graph_callback(n, relayoutData, selected_timeframe, selected_candle_t
                                   template='plotly')
 
     return normal_candlestick_fig, heikin_ashi_fig, adx_fig
+
+
 
 
 if __name__ == '__main__':

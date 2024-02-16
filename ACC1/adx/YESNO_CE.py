@@ -28,7 +28,7 @@ from ta.utils import dropna
 # Replace these with your actual MongoDB connection details
 MONGO_CONNECTION_STRING = "mongodb://localhost:27017/"
 DB_NAME = "banknifty"
-COLLECTION_NAME = "26009"
+COLLECTION_NAME = "26009CE"
 
 client = MongoClient(MONGO_CONNECTION_STRING)
 db = client[DB_NAME]
@@ -53,9 +53,9 @@ unsubscribe_list = []
 data_list = []  # List to store the received data
 df = pd.DataFrame(columns=["timestamp", "lp"])  # Initialize an empty DataFrame for storing the data
 # File paths for saving data and graph
-data_file_path = "26009.csv"
+data_file_path = "26009CE.csv"
 
-graph_file_path = "26009.html"
+graph_file_path = "26009CE.html"
 
 # Check if the data file exists
 if os.path.exists(data_file_path):
@@ -240,7 +240,7 @@ def calculate_heikin_ashi(data):
     # Calculate the difference and add it to the DataFrame
     ha_data['Difference'] = ha_data['open'] - ha_data['close']
 
-    label_csv_filename = 'label_55811CE_19.csv'
+    label_csv_filename = 'label_26009.csv'
     try:
         with open(label_csv_filename, 'w', newline='') as csv_file:
             csv_writer = csv.writer(csv_file)
@@ -533,16 +533,12 @@ def update_graph_callback(n, relayoutData, selected_timeframe, selected_candle_t
         heikin_ashi_fig = go.Figure()
 
     # Create ADX figure
-    # adx_fig = go.Figure(data=[go.Scatter(x=adx_data.index, y=adx_data['adx'], mode='lines', name='ADX')])
+    adx_fig = go.Figure(data=[go.Scatter(x=adx_data.index, y=adx_data['adx'], mode='lines', name='ADX')])
     # Add +DI trace
-    adx_fig = go.Figure()
-    adx_fig.add_trace(go.Scatter(x=adx_data.index, y=adx_data['adx'], mode='lines', name='ADX'))
-
     adx_fig.add_trace(go.Scatter(x=adx_data.index, y=adx_data['di_plus'], mode='lines', name='+DI'))
 
     # Add -DI trace
     adx_fig.add_trace(go.Scatter(x=adx_data.index, y=adx_data['di_minus'], mode='lines', name='-DI'))
-
     adx_fig.update_xaxes(type='category', tickformat='%H:%M')
     adx_fig.update_layout(title=f'Average Directional Index (ADX) ({selected_timeframe})',
                                   xaxis_title='Time',
@@ -552,6 +548,8 @@ def update_graph_callback(n, relayoutData, selected_timeframe, selected_candle_t
     return normal_candlestick_fig, heikin_ashi_fig, adx_fig
 
 
+if __name__ == '__main__':
+    app.run_server(debug=True)
 
 
 if __name__ == '__main__':

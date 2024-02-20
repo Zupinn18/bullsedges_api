@@ -1,0 +1,14 @@
+dash
+pya3
+pymongo
+ta
+ta.utils
+os
+csv
+pytz
+datetime
+pandas
+numpy
+json
+streamlit
+plotly

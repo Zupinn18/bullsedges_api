@@ -253,170 +253,197 @@ def calculate_heikin_ashi(data):
     return ha_data
 
 
+def calculate_he_adx(data, period=14):
+    ha_data = calculate_heikin_ashi(data)
+
+    # Calculate True Range
+    ha_data['prev_close'] = ha_data['close'].shift(1)
+    ha_data['high_low'] = ha_data['high'] - ha_data['low']
+    ha_data['high_prev_close'] = np.abs(ha_data['high'] - ha_data['prev_close'])
+    ha_data['low_prev_close'] = np.abs(ha_data['low'] - ha_data['prev_close'])
+    ha_data['true_range'] = ha_data[['high_low', 'high_prev_close', 'low_prev_close']].max(axis=1)
+
+    # Calculate Directional Movement
+    ha_data['high_prev_high'] = ha_data['high'] - ha_data['high'].shift(1)
+    ha_data['prev_low_low'] = ha_data['low'].shift(1) - ha_data['low']
+    ha_data['plus_dm'] = np.where((ha_data['high_prev_high'] > ha_data['prev_low_low']) & (ha_data['high_prev_high'] > 0), ha_data['high_prev_high'], 0)
+    ha_data['minus_dm'] = np.where((ha_data['prev_low_low'] > ha_data['high_prev_high']) & (ha_data['prev_low_low'] > 0), ha_data['prev_low_low'], 0)
+
+    # Calculate Smoothed True Range and Directional Movement
+    ha_data['atr'] = ha_data['true_range'].rolling(period).mean()
+    ha_data['plus_di'] = 100 * (ha_data['plus_dm'].rolling(period).mean() / ha_data['atr'])
+    ha_data['minus_di'] = 100 * (ha_data['minus_dm'].rolling(period).mean() / ha_data['atr'])
+
+    # Calculate DX
+    ha_data['dx'] = 100 * np.abs((ha_data['plus_di'] - ha_data['minus_di']) / (ha_data['plus_di'] + ha_data['minus_di']))
+
+    # Calculate ADX
+    ha_data['adx'] = ha_data['dx'].rolling(period).mean()
+
+    return ha_data[['adx', 'plus_di', 'minus_di']]
 
 
 
+# def calculate_supertrend(data, atr_period=12, factor=2.0, multiplier=2.0):
+#     data = data.copy()  # Create a copy of the data DataFrame
 
-def calculate_supertrend(data, atr_period=12, factor=2.0, multiplier=2.0):
-    data = data.copy()  # Create a copy of the data DataFrame
+#     close = data['close']
+#     high = data['high']
+#     low = data['low']
 
-    close = data['close']
-    high = data['high']
-    low = data['low']
+#     tr = pd.DataFrame()
+#     tr['h-l'] = high - low
+#     tr['h-pc'] = abs(high - close.shift())
+#     tr['l-pc'] = abs(low - close.shift())
+#     tr['tr'] = tr.max(axis=1)
 
-    tr = pd.DataFrame()
-    tr['h-l'] = high - low
-    tr['h-pc'] = abs(high - close.shift())
-    tr['l-pc'] = abs(low - close.shift())
-    tr['tr'] = tr.max(axis=1)
+#     atr = tr['tr'].rolling(atr_period).mean()
 
-    atr = tr['tr'].rolling(atr_period).mean()
+#     median_price = (high + low) / 2
+#     data['upper_band'] = median_price + (multiplier * atr)
+#     data['lower_band'] = median_price - (multiplier * atr)
 
-    median_price = (high + low) / 2
-    data['upper_band'] = median_price + (multiplier * atr)
-    data['lower_band'] = median_price - (multiplier * atr)
+#     supertrend = pd.Series(index=data.index)
+#     direction = pd.Series(index=data.index)
 
-    supertrend = pd.Series(index=data.index)
-    direction = pd.Series(index=data.index)
+#     supertrend.iloc[0] = data['upper_band'].iloc[0]
+#     direction.iloc[0] = 1
 
-    supertrend.iloc[0] = data['upper_band'].iloc[0]
-    direction.iloc[0] = 1
+#     for i in range(1, len(data)):
+#         if close.iloc[i] > supertrend.iloc[i - 1]:
+#             supertrend.iloc[i] = max(data['lower_band'].iloc[i], supertrend.iloc[i - 1])
+#             direction.iloc[i] = 1
+#         else:
+#             supertrend.iloc[i] = min(data['upper_band'].iloc[i], supertrend.iloc[i - 1])
+#             direction.iloc[i] = -1
 
-    for i in range(1, len(data)):
-        if close.iloc[i] > supertrend.iloc[i - 1]:
-            supertrend.iloc[i] = max(data['lower_band'].iloc[i], supertrend.iloc[i - 1])
-            direction.iloc[i] = 1
-        else:
-            supertrend.iloc[i] = min(data['upper_band'].iloc[i], supertrend.iloc[i - 1])
-            direction.iloc[i] = -1
+#         # Start uptrend calculation anew whenever a new uptrend begins
+#         if direction.iloc[i] == 1 and direction.iloc[i - 1] != 1:
+#             supertrend.iloc[i] = data['lower_band'].iloc[i]
 
-        # Start uptrend calculation anew whenever a new uptrend begins
-        if direction.iloc[i] == 1 and direction.iloc[i - 1] != 1:
-            supertrend.iloc[i] = data['lower_band'].iloc[i]
+#         # Start downtrend calculation anew whenever a new downtrend begins
+#         if direction.iloc[i] == -1 and direction.iloc[i - 1] != -1:
+#             supertrend.iloc[i] = data['upper_band'].iloc[i]
 
-        # Start downtrend calculation anew whenever a new downtrend begins
-        if direction.iloc[i] == -1 and direction.iloc[i - 1] != -1:
-            supertrend.iloc[i] = data['upper_band'].iloc[i]
+#     data['supertrend'] = supertrend  # Add the 'supertrend' column to the data DataFrame
+#     data['direction'] = direction  # Add the 'direction' column to the data DataFrame
 
-    data['supertrend'] = supertrend  # Add the 'supertrend' column to the data DataFrame
-    data['direction'] = direction  # Add the 'direction' column to the data DataFrame
+#     return data[['open', 'high', 'low', 'close', 'supertrend', 'direction', 'lower_band', 'upper_band']]
 
-    return data[['open', 'high', 'low', 'close', 'supertrend', 'direction', 'lower_band', 'upper_band']]
+# def calculate_trend_lines(data):
+#     current_trend = None
+#     trend_start = None
+#     trend_lines = []
 
-def calculate_trend_lines(data):
-    current_trend = None
-    trend_start = None
-    trend_lines = []
+#     for i in range(len(data)):
+#         current_signal = data.iloc[i]
 
-    for i in range(len(data)):
-        current_signal = data.iloc[i]
+#         if current_trend is None:
+#             current_trend = current_signal['direction']
+#             trend_start = current_signal.name
 
-        if current_trend is None:
-            current_trend = current_signal['direction']
-            trend_start = current_signal.name
+#         if current_trend != current_signal['direction']:
+#             if trend_start is not None:
+#                 trend_data = data.loc[trend_start:data.index[i - 1]]
+#                 if len(trend_data) > 1:
+#                     trend_lines.append((current_trend, trend_data))
 
-        if current_trend != current_signal['direction']:
-            if trend_start is not None:
-                trend_data = data.loc[trend_start:data.index[i - 1]]
-                if len(trend_data) > 1:
-                    trend_lines.append((current_trend, trend_data))
+#             current_trend = current_signal['direction']
+#             trend_start = current_signal.name
 
-            current_trend = current_signal['direction']
-            trend_start = current_signal.name
+#     # Handle the last trend if it's still ongoing
+#     if trend_start is not None and trend_start != data.index[-1]:
+#         trend_data = data.loc[trend_start:]
+#         if len(trend_data) > 1:
+#             trend_lines.append((current_trend, trend_data))
 
-    # Handle the last trend if it's still ongoing
-    if trend_start is not None and trend_start != data.index[-1]:
-        trend_data = data.loc[trend_start:]
-        if len(trend_data) > 1:
-            trend_lines.append((current_trend, trend_data))
-
-    return trend_lines
-
-
-all_trend_lines = []
+#     return trend_lines
 
 
+# all_trend_lines = []
 
-# Function to update the graph
 
-def calculate_current_trend_lines(data):
-    current_trend = None
-    in_trend = False
-    trend_start = None
-    trend_lines = []
-    buy_signals = pd.DataFrame(columns=['supertrend', 'direction'])
-    sell_signals = pd.DataFrame(columns=['supertrend', 'direction'])
-    # band_data = pd.DataFrame(columns=['Timestamp', 'band_type', 'band_value'])
 
-    for i in range(len(data)):
-        current_signal = data.iloc[i]
+# # Function to update the graph
 
-        if current_trend is None:
-            current_trend = current_signal['direction']
-            in_trend = True
-            trend_start = current_signal.name
+# def calculate_current_trend_lines(data):
+#     current_trend = None
+#     in_trend = False
+#     trend_start = None
+#     trend_lines = []
+#     buy_signals = pd.DataFrame(columns=['supertrend', 'direction'])
+#     sell_signals = pd.DataFrame(columns=['supertrend', 'direction'])
+#     # band_data = pd.DataFrame(columns=['Timestamp', 'band_type', 'band_value'])
 
-        if current_trend != current_signal['direction']:
-            if current_signal['direction'] == 1:
-                sell_signals = pd.concat([sell_signals, current_signal])
-                # band_data = pd.concat([band_data, pd.DataFrame({'Timestamp': [current_signal.name], 'band_type': ['lower_band'], 'band_value': [current_signal['lower_band']]}), pd.DataFrame({'Timestamp': [current_signal.name], 'band_type': ['upper_band'], 'band_value': [np.nan]})])
-            else:
-                buy_signals = pd.concat([buy_signals, current_signal])
-                # band_data = pd.concat([band_data, pd.DataFrame({'Timestamp': [current_signal.name], 'band_type': ['upper_band'], 'band_value': [current_signal['upper_band']]}), pd.DataFrame({'Timestamp': [current_signal.name], 'band_type': ['lower_band'], 'band_value': [np.nan]})])
+#     for i in range(len(data)):
+#         current_signal = data.iloc[i]
 
-            if in_trend:
-                trend_data = data.loc[trend_start:data.index[i - 1]]
+#         if current_trend is None:
+#             current_trend = current_signal['direction']
+#             in_trend = True
+#             trend_start = current_signal.name
 
-                if len(trend_data) > 1:
-                    trend_lines.append((current_trend, trend_data))
+#         if current_trend != current_signal['direction']:
+#             if current_signal['direction'] == 1:
+#                 sell_signals = pd.concat([sell_signals, current_signal])
+#                 # band_data = pd.concat([band_data, pd.DataFrame({'Timestamp': [current_signal.name], 'band_type': ['lower_band'], 'band_value': [current_signal['lower_band']]}), pd.DataFrame({'Timestamp': [current_signal.name], 'band_type': ['upper_band'], 'band_value': [np.nan]})])
+#             else:
+#                 buy_signals = pd.concat([buy_signals, current_signal])
+#                 # band_data = pd.concat([band_data, pd.DataFrame({'Timestamp': [current_signal.name], 'band_type': ['upper_band'], 'band_value': [current_signal['upper_band']]}), pd.DataFrame({'Timestamp': [current_signal.name], 'band_type': ['lower_band'], 'band_value': [np.nan]})])
 
-            else:
-                if current_signal['direction'] == 1 and current_trend == -1:
-                    updated_trend_data = data.loc[trend_start:data.index[i]]
-                    updated_supertrend_data = calculate_supertrend(updated_trend_data, factor=2.0)
-                    current_signal['supertrend'] = updated_supertrend_data['supertrend'].iloc[-1]
-                    current_signal['direction'] = updated_supertrend_data['direction'].iloc[-1]
-                elif current_signal['direction'] == -1 and current_trend == 1:
-                    updated_trend_data = data.loc[trend_start:data.index[i]]
-                    updated_supertrend_data = calculate_supertrend(updated_trend_data, factor=2.0)
-                    current_signal['supertrend'] = updated_supertrend_data['supertrend'].iloc[-1]
-                    current_signal['direction'] = updated_supertrend_data['direction'].iloc[-1]
+#             if in_trend:
+#                 trend_data = data.loc[trend_start:data.index[i - 1]]
 
-            current_trend = current_signal['direction']
-            in_trend = False
+#                 if len(trend_data) > 1:
+#                     trend_lines.append((current_trend, trend_data))
 
-        if not in_trend:
-            if current_trend == 1:
-                if not np.isnan(current_signal['upper_band']):
-                    trend_start = current_signal.name
-                    in_trend = True
-            else:
-                if not np.isnan(current_signal['lower_band']):
-                    trend_start = current_signal.name
-                    in_trend = True
+#             else:
+#                 if current_signal['direction'] == 1 and current_trend == -1:
+#                     updated_trend_data = data.loc[trend_start:data.index[i]]
+#                     updated_supertrend_data = calculate_supertrend(updated_trend_data, factor=2.0)
+#                     current_signal['supertrend'] = updated_supertrend_data['supertrend'].iloc[-1]
+#                     current_signal['direction'] = updated_supertrend_data['direction'].iloc[-1]
+#                 elif current_signal['direction'] == -1 and current_trend == 1:
+#                     updated_trend_data = data.loc[trend_start:data.index[i]]
+#                     updated_supertrend_data = calculate_supertrend(updated_trend_data, factor=2.0)
+#                     current_signal['supertrend'] = updated_supertrend_data['supertrend'].iloc[-1]
+#                     current_signal['direction'] = updated_supertrend_data['direction'].iloc[-1]
 
-    if in_trend:
-        trend_data = data.loc[trend_start:]
+#             current_trend = current_signal['direction']
+#             in_trend = False
 
-        if len(trend_data) > 1:
-            first_high = trend_data['high'].iloc[0]
-            last_close = trend_data['close'].iloc[-1]
+#         if not in_trend:
+#             if current_trend == 1:
+#                 if not np.isnan(current_signal['upper_band']):
+#                     trend_start = current_signal.name
+#                     in_trend = True
+#             else:
+#                 if not np.isnan(current_signal['lower_band']):
+#                     trend_start = current_signal.name
+#                     in_trend = True
 
-    # Handle the continuation of uptrend without a change in direction
-    if len(trend_lines) > 0 and data.index[-1] not in trend_lines[-1][1].index and trend_lines[-1][0] == 1:
-        last_trend_type, last_trend_data = trend_lines[-1]
-        continuation_data = data.loc[data.index > last_trend_data.index[-1]]
-        if len(continuation_data) > 1:
-            updated_trend_data = pd.concat([last_trend_data.iloc[:-1], continuation_data])
-            updated_supertrend_data = calculate_supertrend(updated_trend_data, factor=2.0)
-            continuation_data['supertrend'] = updated_supertrend_data['supertrend'].values[-len(continuation_data):]
-            continuation_data['direction'] = updated_supertrend_data['direction'].values[-len(continuation_data):]
-            trend_lines[-1] = (last_trend_type, updated_trend_data)
+#     if in_trend:
+#         trend_data = data.loc[trend_start:]
 
-    # Save band_data to a single CSV file
-    # band_data.to_csv('band_data_CE.csv', index=False)
+#         if len(trend_data) > 1:
+#             first_high = trend_data['high'].iloc[0]
+#             last_close = trend_data['close'].iloc[-1]
 
-    return trend_lines, buy_signals, sell_signals
+#     # Handle the continuation of uptrend without a change in direction
+#     if len(trend_lines) > 0 and data.index[-1] not in trend_lines[-1][1].index and trend_lines[-1][0] == 1:
+#         last_trend_type, last_trend_data = trend_lines[-1]
+#         continuation_data = data.loc[data.index > last_trend_data.index[-1]]
+#         if len(continuation_data) > 1:
+#             updated_trend_data = pd.concat([last_trend_data.iloc[:-1], continuation_data])
+#             updated_supertrend_data = calculate_supertrend(updated_trend_data, factor=2.0)
+#             continuation_data['supertrend'] = updated_supertrend_data['supertrend'].values[-len(continuation_data):]
+#             continuation_data['direction'] = updated_supertrend_data['direction'].values[-len(continuation_data):]
+#             trend_lines[-1] = (last_trend_type, updated_trend_data)
+
+#     # Save band_data to a single CSV file
+#     # band_data.to_csv('band_data_CE.csv', index=False)
+
+#     return trend_lines, buy_signals, sell_signals
 
 def calculate_adx(df):
     df['adx'] = ta.trend.ADXIndicator(df['high'], df['low'], df['close'], window=14, fillna=True).adx()
@@ -441,6 +468,7 @@ candle_type_dropdown = dcc.Dropdown(
 # Add a new graph for Heikin Ashi candlestick
 heikin_ashi_graph = dcc.Graph(id='heikin-ashi-graph')
 adx_graph = dcc.Graph(id='adx-graph')
+heikin_ashi_adx_graph = dcc.Graph(id='heikin-ashi-adx-graph')
 
 # Update layout to include the new graph component
 app.layout = html.Div([
@@ -448,6 +476,7 @@ app.layout = html.Div([
     dcc.Graph(id='candlestick-graph'),
     heikin_ashi_graph,
     adx_graph,
+    heikin_ashi_adx_graph,  # Add the new graph component
     dcc.Dropdown(
         id='timeframe-dropdown',
         options=[
@@ -470,7 +499,8 @@ app.layout = html.Div([
 @app.callback(
     [Output('candlestick-graph', 'figure'),
      Output('heikin-ashi-graph', 'figure'),
-     Output('adx-graph', 'figure')],
+     Output('adx-graph', 'figure'),
+     Output('heikin-ashi-adx-graph', 'figure')],  # Add output for the new graph
     [Input('update-interval', 'n_intervals'),
      Input('candlestick-graph', 'relayoutData')],
     [State('timeframe-dropdown', 'value'),
@@ -544,8 +574,22 @@ def update_graph_callback(n, relayoutData, selected_timeframe, selected_candle_t
                                   xaxis_title='Time',
                                   yaxis_title='ADX Value',
                                   template='plotly')
+    
+    heikin_ashi_adx_data = calculate_he_adx(resampled_data)
 
-    return normal_candlestick_fig, heikin_ashi_fig, adx_fig
+    # Create Heikin Ashi ADX figure
+    heikin_ashi_adx_fig = go.Figure(data=[
+    go.Scatter(x=heikin_ashi_adx_data.index, y=heikin_ashi_adx_data['adx'], mode='lines', name='ADX'),
+    go.Scatter(x=heikin_ashi_adx_data.index, y=heikin_ashi_adx_data['plus_di'], mode='lines', name='+DI'),
+    go.Scatter(x=heikin_ashi_adx_data.index, y=heikin_ashi_adx_data['minus_di'], mode='lines', name='-DI')
+])
+    heikin_ashi_adx_fig.update_xaxes(type='category', tickformat='%H:%M')
+    heikin_ashi_adx_fig.update_layout(title=f'Heikin Ashi Average Directional Index (ADX) ({selected_timeframe})',
+                                       xaxis_title='Time',
+                                       yaxis_title='ADX Value',
+                                       template='plotly')
+
+    return normal_candlestick_fig, heikin_ashi_fig, adx_fig, heikin_ashi_adx_fig
 
 
 if __name__ == '__main__':

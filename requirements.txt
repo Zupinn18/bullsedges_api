@@ -2,7 +2,6 @@ dash
 pya3
 pymongo
 ta
-os
 csv
 pytz
 datetime

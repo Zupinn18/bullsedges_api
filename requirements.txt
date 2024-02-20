@@ -2,7 +2,6 @@ dash
 pya3
 pymongo
 ta
-csv
 pytz
 datetime
 pandas

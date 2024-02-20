@@ -6,6 +6,5 @@ pytz
 datetime
 pandas
 numpy
-json
 streamlit
 plotly

@@ -262,7 +262,26 @@ def calculate_he_adx(data, period=14):
     ha_data['plus_di'] = adx_indicator.adx_pos()
     ha_data['minus_di'] = adx_indicator.adx_neg()
 
-    return ha_data[['adx', 'plus_di', 'minus_di']]
+    # Find the index where ADX first crosses 20
+    idx = (ha_data['adx'] > 20).idxmax()
+
+    # Extract relevant data
+    adx_cross_data = ha_data.loc[idx:, ['adx', 'plus_di', 'minus_di']]
+
+    # Determine color for +DI and -DI
+    adx_cross_data['+di_color'] = 'up'
+    adx_cross_data.loc[adx_cross_data['plus_di'] < adx_cross_data['minus_di'], '+di_color'] = 'down'
+    adx_cross_data['-di_color'] = 'up'
+    adx_cross_data.loc[adx_cross_data['plus_di'] > adx_cross_data['minus_di'], '-di_color'] = 'down'
+
+    # Save data to CSV file
+    adx_cross_data.to_csv('adx_filtered_data.csv', index_label='timestamp')
+
+    return adx_cross_data[['adx', 'plus_di', 'minus_di']]
+
+
+# Example usage:
+# filtered_data = calculate_he_adx(data)
 
 
 
@@ -505,7 +524,7 @@ def update_graph_callback(n, relayoutData, selected_timeframe, selected_candle_t
     else:
         # Adjust xaxis_range to include the last 4320 minutes
         end_time = df.index[-1]
-        start_time = end_time - pd.Timedelta(minutes=4320)
+        start_time = end_time - pd.Timedelta(hours=72)
         xaxis_range = [start_time, end_time]
 
     # Filter data based on xaxis range
@@ -552,10 +571,10 @@ def update_graph_callback(n, relayoutData, selected_timeframe, selected_candle_t
     # Create ADX figure
     adx_fig = go.Figure(data=[go.Scatter(x=adx_data.index, y=adx_data['adx'], mode='lines', name='ADX')])
     # Add +DI trace
-    adx_fig.add_trace(go.Scatter(x=adx_data.index, y=adx_data['di_plus'], mode='lines', name='+DI'))
+    adx_fig.add_trace(go.Scatter(x=adx_data.index, y=adx_data['di_plus'], mode='lines', name='+DI', line=dict(color='green')))
 
     # Add -DI trace
-    adx_fig.add_trace(go.Scatter(x=adx_data.index, y=adx_data['di_minus'], mode='lines', name='-DI'))
+    adx_fig.add_trace(go.Scatter(x=adx_data.index, y=adx_data['di_minus'], mode='lines', name='-DI', line=dict(color='red')))
     adx_fig.update_xaxes(type='category', tickformat='%H:%M')
     adx_fig.update_layout(title=f'Average Directional Index (ADX) ({selected_timeframe})',
                                   xaxis_title='Time',
@@ -566,10 +585,11 @@ def update_graph_callback(n, relayoutData, selected_timeframe, selected_candle_t
 
     # Create Heikin Ashi ADX figure
     heikin_ashi_adx_fig = go.Figure(data=[
-    go.Scatter(x=heikin_ashi_adx_data.index, y=heikin_ashi_adx_data['adx'], mode='lines', name='ADX'),
-    go.Scatter(x=heikin_ashi_adx_data.index, y=heikin_ashi_adx_data['plus_di'], mode='lines', name='+DI'),
-    go.Scatter(x=heikin_ashi_adx_data.index, y=heikin_ashi_adx_data['minus_di'], mode='lines', name='-DI')
+    go.Scatter(x=heikin_ashi_adx_data.index, y=heikin_ashi_adx_data['adx'], mode='lines', name='ADX', line=dict(color='blue')),
+    go.Scatter(x=heikin_ashi_adx_data.index, y=heikin_ashi_adx_data['plus_di'], mode='lines', name='+DI', line=dict(color='green')),
+    go.Scatter(x=heikin_ashi_adx_data.index, y=heikin_ashi_adx_data['minus_di'], mode='lines', name='-DI', line=dict(color='red'))
 ])
+
     heikin_ashi_adx_fig.update_xaxes(type='category', tickformat='%H:%M')
     heikin_ashi_adx_fig.update_layout(title=f'Heikin Ashi Average Directional Index (ADX) ({selected_timeframe})',
                                        xaxis_title='Time',

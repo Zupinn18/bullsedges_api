@@ -1,0 +1,11 @@
+dash
+pya3
+pymongo
+ta
+pytz
+datetime
+pandas
+numpy
+streamlit
+plotly
+gunicorn

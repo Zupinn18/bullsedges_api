@@ -256,29 +256,11 @@ def calculate_heikin_ashi(data):
 def calculate_he_adx(data, period=14):
     ha_data = calculate_heikin_ashi(data)
 
-    # Calculate True Range
-    ha_data['prev_close'] = ha_data['close'].shift(1)
-    ha_data['high_low'] = ha_data['high'] - ha_data['low']
-    ha_data['high_prev_close'] = np.abs(ha_data['high'] - ha_data['prev_close'])
-    ha_data['low_prev_close'] = np.abs(ha_data['low'] - ha_data['prev_close'])
-    ha_data['true_range'] = ha_data[['high_low', 'high_prev_close', 'low_prev_close']].max(axis=1)
-
-    # Calculate Directional Movement
-    ha_data['high_prev_high'] = ha_data['high'] - ha_data['high'].shift(1)
-    ha_data['prev_low_low'] = ha_data['low'].shift(1) - ha_data['low']
-    ha_data['plus_dm'] = np.where((ha_data['high_prev_high'] > ha_data['prev_low_low']) & (ha_data['high_prev_high'] > 0), ha_data['high_prev_high'], 0)
-    ha_data['minus_dm'] = np.where((ha_data['prev_low_low'] > ha_data['high_prev_high']) & (ha_data['prev_low_low'] > 0), ha_data['prev_low_low'], 0)
-
-    # Calculate Smoothed True Range and Directional Movement
-    ha_data['atr'] = ha_data['true_range'].rolling(period).mean()
-    ha_data['plus_di'] = 100 * (ha_data['plus_dm'].rolling(period).mean() / ha_data['atr'])
-    ha_data['minus_di'] = 100 * (ha_data['minus_dm'].rolling(period).mean() / ha_data['atr'])
-
-    # Calculate DX
-    ha_data['dx'] = 100 * np.abs((ha_data['plus_di'] - ha_data['minus_di']) / (ha_data['plus_di'] + ha_data['minus_di']))
-
-    # Calculate ADX
-    ha_data['adx'] = ha_data['dx'].rolling(period).mean()
+    # Calculate ADX, +DI, and -DI using ta library
+    adx_indicator = ta.trend.ADXIndicator(ha_data['high'], ha_data['low'], ha_data['close'], window=period, fillna=True)
+    ha_data['adx'] = adx_indicator.adx()
+    ha_data['plus_di'] = adx_indicator.adx_pos()
+    ha_data['minus_di'] = adx_indicator.adx_neg()
 
     return ha_data[['adx', 'plus_di', 'minus_di']]
 
@@ -517,13 +499,18 @@ def update_graph_callback(n, relayoutData, selected_timeframe, selected_candle_t
     df = df.dropna(subset=['lp'])
 
     # Handle xaxis range if available in relayoutData
+    # Handle xaxis range if available in relayoutData
     if 'xaxis.range' in relayoutData:
         xaxis_range = relayoutData['xaxis.range']
     else:
-        xaxis_range = [df.index[-1] - pd.Timedelta(minutes=4320), df.index[-1]]
+        # Adjust xaxis_range to include the last 4320 minutes
+        end_time = df.index[-1]
+        start_time = end_time - pd.Timedelta(minutes=4320)
+        xaxis_range = [start_time, end_time]
 
     # Filter data based on xaxis range
     filtered_data = df[(df.index >= xaxis_range[0]) & (df.index <= xaxis_range[1])]
+
 
     # Resample data for candlestick graph based on the selected timeframe
     resampled_data = filtered_data["lp"].resample(selected_timeframe).ohlc()

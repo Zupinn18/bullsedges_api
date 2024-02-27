@@ -198,7 +198,7 @@ def calculate_heikin_ashi(data):
                         ha_data.at[ha_data.index[j], 'mark'] = 'YES'
                         label_data.append(('YES', ha_data.index[j], data['open'].iloc[j], None))
                         # Check if the current closing price is 7 points higher than the previous "YES" high
-                        if prev_green_high is not None and data['high'].iloc[j] > ha_data['high'].iloc[j - 1] + 7:
+                        if prev_green_high is not None and data['high'].iloc[j] > ha_data['high'].iloc[j - 1] + 100:
                             label_data.append(('seven', ha_data.index[j], data['high'].iloc[j], None))
                         break  # Exit the loop once the condition is satisfied
                 else:

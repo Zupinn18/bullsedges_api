@@ -28,7 +28,7 @@ from ta.utils import dropna
 # Replace these with your actual MongoDB connection details
 MONGO_CONNECTION_STRING = "mongodb://localhost:27017/"
 DB_NAME = "banknifty"
-COLLECTION_NAME = "72238CE"
+COLLECTION_NAME = "72240CE"
 
 client = MongoClient(MONGO_CONNECTION_STRING)
 db = client[DB_NAME]
@@ -53,9 +53,9 @@ unsubscribe_list = []
 data_list = []  # List to store the received data
 df = pd.DataFrame(columns=["timestamp", "lp"])  # Initialize an empty DataFrame for storing the data
 # File paths for saving data and graph
-data_file_path = "72238CE.csv"
+data_file_path = "72240CE.csv"
 
-graph_file_path = "72238CE.html"
+graph_file_path = "72240CE.html"
 
 # Check if the data file exists
 if os.path.exists(data_file_path):
@@ -147,7 +147,7 @@ while not socket_opened:
     pass
 
 # Subscribe to Tata Motors
-subscribe_list = [alice.get_instrument_by_token('NFO', 72238)]
+subscribe_list = [alice.get_instrument_by_token('NFO', 72240)]
 alice.subscribe(subscribe_list)
 print(datetime.now())
 sleep(10)
@@ -240,7 +240,7 @@ def calculate_heikin_ashi(data):
     # Calculate the difference and add it to the DataFrame
     ha_data['Difference'] = ha_data['open'] - ha_data['close']
 
-    label_csv_filename = 'label_72238CE.csv'
+    label_csv_filename = 'label_72240CE.csv'
     try:
         with open(label_csv_filename, 'w', newline='') as csv_file:
             csv_writer = csv.writer(csv_file)

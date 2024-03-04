@@ -13,8 +13,8 @@ alice = Aliceblue(user_id=user_id, api_key=api_key)
 print(alice.get_session_id())
 
 # Path to the CSV files
-label_csv_file_path = 'label_72240CE.csv'
-adx_csv_file_path = 'adx_CE_data.csv'
+label_csv_file_path = 'label_39328CE.csv'
+# adx_csv_file_path = 'adx_CE_data.csv'
 
 # Initialize the state variable
 state = 'waiting_for_yes'
@@ -30,7 +30,7 @@ def place_buy_order():
     print("Placing a Buy order...")
     print(alice.place_order(
         transaction_type=TransactionType.Buy,
-        instrument=alice.get_instrument_by_token('NFO', 72240),
+        instrument=alice.get_instrument_by_token('NFO', 39328),
         quantity=15,
         order_type=OrderType.Market,
         product_type=ProductType.Intraday,
@@ -52,7 +52,7 @@ def place_sell_order():
         print("Placing a Sell order...")
         print(alice.place_order(
             transaction_type=TransactionType.Sell,
-            instrument=alice.get_instrument_by_token('NFO', 72240),
+            instrument=alice.get_instrument_by_token('NFO', 39328),
             quantity=15,
             order_type=OrderType.Market,
             product_type=ProductType.Intraday,
@@ -84,10 +84,11 @@ while True:
         # Read the CSV file for label_26009.csv
         df_label = pd.read_csv(label_csv_file_path)
         # Read the CSV file for adx_filtered_data.csv
-        df_adx = pd.read_csv(adx_csv_file_path)
+        # df_adx = pd.read_csv(adx_csv_file_path)
 
         # Check if the DataFrames are empty
-        if df_label.empty or df_adx.empty:
+        # if df_label.empty or df_adx.empty:
+        if df_label.empty:
             print("CSV file is empty. Waiting for data...")
         else:
             # Check the last row of the label CSV for 'yes' value
@@ -96,11 +97,11 @@ while True:
             timestamp = time.strftime('%Y-%m-%d %H:%M:%S')
             
             # Check the last row of the ADX CSV for conditions
-            last_row_adx = df_adx.iloc[-1]
-            adx_value = last_row_adx['adx']  # Replace with the actual column name
-            di_color = last_row_adx['+di_color']  # Replace with the actual column name
+            # last_row_adx = df_adx.iloc[-1]
+            # adx_value = last_row_adx['adx']  # Replace with the actual column name
+            # di_color = last_row_adx['+di_color']  # Replace with the actual column name
 
-            if state == 'waiting_for_yes' and value_label == 'YES' and adx_value > 20 and di_color == 'up':
+            if state == 'waiting_for_yes' and value_label == 'YES':
                 write_log_entry(timestamp, 'INFO', "State: Waiting for yes and conditions met")
                 # Place a Buy order and reset the timer
                 place_buy_order()

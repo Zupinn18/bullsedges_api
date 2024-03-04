@@ -28,7 +28,7 @@ from ta.utils import dropna
 # Replace these with your actual MongoDB connection details
 MONGO_CONNECTION_STRING = "mongodb://localhost:27017/"
 DB_NAME = "banknifty"
-COLLECTION_NAME = "72237PE"
+COLLECTION_NAME = "39321PE"
 
 client = MongoClient(MONGO_CONNECTION_STRING)
 db = client[DB_NAME]
@@ -53,9 +53,9 @@ unsubscribe_list = []
 data_list = []  # List to store the received data
 df = pd.DataFrame(columns=["timestamp", "lp"])  # Initialize an empty DataFrame for storing the data
 # File paths for saving data and graph
-data_file_path = "72237PE.csv"
+data_file_path = "39321PE.csv"
 
-graph_file_path = "72237PE.html"
+graph_file_path = "39321PE.html"
 
 # Check if the data file exists
 if os.path.exists(data_file_path):
@@ -147,7 +147,7 @@ while not socket_opened:
     pass
 
 # Subscribe to Tata Motors
-subscribe_list = [alice.get_instrument_by_token('NFO', 72237)]
+subscribe_list = [alice.get_instrument_by_token('NFO', 39321)]
 alice.subscribe(subscribe_list)
 print(datetime.now())
 sleep(10)
@@ -186,34 +186,25 @@ def calculate_heikin_ashi(data):
     for i in range(1, len(ha_data)):
         if (ha_data['close'].iloc[i - 1] > ha_data['open'].iloc[i - 1] and
                 ha_data['close'].iloc[i] > ha_data['open'].iloc[i]):
-
             consecutive_green_candles += 1
             prev_yes_open = data['open'].iloc[i]  # Update previous "YES" open value
             prev_green_high = ha_data['high'].iloc[i]  # Update the high of the previous green candle
 
-            if consecutive_green_candles == 1:
-                # Check if the current candle or the next candles satisfy the condition
-                for j in range(i, len(ha_data)):
-                    if ha_data['high'].iloc[j] > ha_data['high'].iloc[j - 1]:
-                        ha_data.at[ha_data.index[j], 'mark'] = 'YES'
-                        label_data.append(('YES', ha_data.index[j], data['open'].iloc[j], None))
-                        # Check if the current closing price is 7 points higher than the previous "YES" high
-                        if prev_green_high is not None and data['high'].iloc[j] > ha_data['high'].iloc[j - 1] + 7:
-                            label_data.append(('seven', ha_data.index[j], data['high'].iloc[j], None))
-                        break  # Exit the loop once the condition is satisfied
-                else:
-                # The condition was not met for consecutive candles, move on to the next candle
-                    consecutive_green_candles = 0
+            if consecutive_green_candles == 1:  # Change made here, check for second green candle
+                ha_data.at[ha_data.index[i], 'mark'] = 'YES'
+                label_data.append(('YES', ha_data.index[i], data['open'].iloc[i], None))
+                # Check if the current closing price is 7 points higher than the previous "YES" high
+                if prev_green_high is not None and data['high'].iloc[i] > ha_data['high'].iloc[i - 1] + 7:
+                    label_data.append(('seven', ha_data.index[i], data['high'].iloc[i], None))
+                consecutive_green_candles = 0  # Reset consecutive green candles count
         elif (ha_data['close'].iloc[i - 1] > ha_data['open'].iloc[i - 1] and
             ha_data['close'].iloc[i] < ha_data['open'].iloc[i]):
-
             # Check if the previous candle was green
             if consecutive_green_candles > 0:
                 ha_data.at[ha_data.index[i], 'mark'] = 'NO'
                 if prev_yes_open is not None:
-                    if prev_green_high is not None and data['high'].iloc[j] > ha_data['high'].iloc[j - 1] + 7:
-                            label_data.append(('seven', ha_data.index[j], data['high'].iloc[j], None))
-
+                    if prev_green_high is not None and data['high'].iloc[i] > ha_data['high'].iloc[i - 1] + 7:
+                        label_data.append(('seven', ha_data.index[i], data['high'].iloc[i], None))
                     if no_confirmed:  # Calculate difference only if "NO" is confirmed
                         confirmed_no_closing = ha_data['close'].iloc[i]  # Store confirmed "NO" closing value
                         diff = prev_yes_open - confirmed_no_closing  # Corrected difference calculation
@@ -224,7 +215,6 @@ def calculate_heikin_ashi(data):
 
                         if i + 1 < len(ha_data) and ha_data['close'].iloc[i + 1] < ha_data['open'].iloc[i + 1]:
                             label_data.append(('RED', ha_data.index[i + 1], ha_data['close'].iloc[i + 1], None))
-                        # yes_updated = False  # Reset 'YES' update flag
                     else:
                         ha_data.at[ha_data.index[i], 'mark'] = ''
                         print("Warning: NO not confirmed yet, skipping difference calculation")
@@ -235,12 +225,13 @@ def calculate_heikin_ashi(data):
                 no_confirmed = True  # "NO" is confirmed
                 consecutive_green_candles = 0  # Reset consecutive_green_candles
 
+
         
 
     # Calculate the difference and add it to the DataFrame
     ha_data['Difference'] = ha_data['open'] - ha_data['close']
 
-    label_csv_filename = 'label_72237PE.csv'
+    label_csv_filename = 'label_39321PE.csv'
     try:
         with open(label_csv_filename, 'w', newline='') as csv_file:
             csv_writer = csv.writer(csv_file)

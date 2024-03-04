@@ -458,16 +458,16 @@ candle_type_dropdown = dcc.Dropdown(
 
 # Add a new graph for Heikin Ashi candlestick
 heikin_ashi_graph = dcc.Graph(id='heikin-ashi-graph')
-adx_graph = dcc.Graph(id='adx-graph')
-heikin_ashi_adx_graph = dcc.Graph(id='heikin-ashi-adx-graph')
+# adx_graph = dcc.Graph(id='adx-graph')
+# heikin_ashi_adx_graph = dcc.Graph(id='heikin-ashi-adx-graph')
 
 # Update layout to include the new graph component
 app.layout = html.Div([
     candle_type_dropdown,
     dcc.Graph(id='candlestick-graph'),
     heikin_ashi_graph,
-    adx_graph,
-    heikin_ashi_adx_graph,  # Add the new graph component
+    # adx_graph,
+    # heikin_ashi_adx_graph,  # Add the new graph component
     dcc.Dropdown(
         id='timeframe-dropdown',
         options=[
@@ -489,9 +489,9 @@ app.layout = html.Div([
 # Callback to update the candlestick graphs based on selected time frame and candle type
 @app.callback(
     [Output('candlestick-graph', 'figure'),
-     Output('heikin-ashi-graph', 'figure'),
-     Output('adx-graph', 'figure'),
-     Output('heikin-ashi-adx-graph', 'figure')],  # Add output for the new graph
+     Output('heikin-ashi-graph', 'figure')],
+    #  Output('adx-graph', 'figure'),
+    #  Output('heikin-ashi-adx-graph', 'figure')],  # Add output for the new graph
     [Input('update-interval', 'n_intervals'),
      Input('candlestick-graph', 'relayoutData')],
     [State('timeframe-dropdown', 'value'),

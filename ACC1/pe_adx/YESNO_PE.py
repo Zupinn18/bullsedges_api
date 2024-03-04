@@ -244,31 +244,31 @@ def calculate_heikin_ashi(data):
     return ha_data
 
 
-def calculate_he_adx(data, period=14):
-    ha_data = calculate_heikin_ashi(data)
+# def calculate_he_adx(data, period=14):
+#     ha_data = calculate_heikin_ashi(data)
 
-    # Calculate ADX, +DI, and -DI using ta library
-    adx_indicator = ta.trend.ADXIndicator(ha_data['high'], ha_data['low'], ha_data['close'], window=period, fillna=True)
-    ha_data['adx'] = adx_indicator.adx()
-    ha_data['plus_di'] = adx_indicator.adx_pos()
-    ha_data['minus_di'] = adx_indicator.adx_neg()
+#     # Calculate ADX, +DI, and -DI using ta library
+#     adx_indicator = ta.trend.ADXIndicator(ha_data['high'], ha_data['low'], ha_data['close'], window=period, fillna=True)
+#     ha_data['adx'] = adx_indicator.adx()
+#     ha_data['plus_di'] = adx_indicator.adx_pos()
+#     ha_data['minus_di'] = adx_indicator.adx_neg()
 
-    # Find the index where ADX first crosses 20
-    idx = (ha_data['adx'] > 20).idxmax()
+#     # Find the index where ADX first crosses 20
+#     idx = (ha_data['adx'] > 20).idxmax()
 
-    # Extract relevant data
-    adx_cross_data = ha_data.loc[idx:, ['adx', 'plus_di', 'minus_di']]
+#     # Extract relevant data
+#     adx_cross_data = ha_data.loc[idx:, ['adx', 'plus_di', 'minus_di']]
 
-    # Determine color for +DI and -DI
-    adx_cross_data['+di_color'] = 'up'
-    adx_cross_data.loc[adx_cross_data['plus_di'] < adx_cross_data['minus_di'], '+di_color'] = 'down'
-    adx_cross_data['-di_color'] = 'up'
-    adx_cross_data.loc[adx_cross_data['plus_di'] > adx_cross_data['minus_di'], '-di_color'] = 'down'
+#     # Determine color for +DI and -DI
+#     adx_cross_data['+di_color'] = 'up'
+#     adx_cross_data.loc[adx_cross_data['plus_di'] < adx_cross_data['minus_di'], '+di_color'] = 'down'
+#     adx_cross_data['-di_color'] = 'up'
+#     adx_cross_data.loc[adx_cross_data['plus_di'] > adx_cross_data['minus_di'], '-di_color'] = 'down'
 
-    # Save data to CSV file
-    adx_cross_data.to_csv('adx_PE_data.csv', index_label='timestamp')
+#     # Save data to CSV file
+#     adx_cross_data.to_csv('adx_PE_data.csv', index_label='timestamp')
 
-    return adx_cross_data[['adx', 'plus_di', 'minus_di']]
+#     return adx_cross_data[['adx', 'plus_di', 'minus_di']]
 
 
 # Example usage:
@@ -437,12 +437,12 @@ def calculate_he_adx(data, period=14):
 
 #     return trend_lines, buy_signals, sell_signals
 
-def calculate_adx(df):
-    df['adx'] = ta.trend.ADXIndicator(df['high'], df['low'], df['close'], window=14, fillna=True).adx()
-    df['di_plus'] = ta.trend.ADXIndicator(df['high'], df['low'], df['close'], window=14, fillna=True).adx_pos()
-    df['di_minus'] = ta.trend.ADXIndicator(df['high'], df['low'], df['close'], window=14, fillna=True).adx_neg()
+# def calculate_adx(df):
+#     df['adx'] = ta.trend.ADXIndicator(df['high'], df['low'], df['close'], window=14, fillna=True).adx()
+#     df['di_plus'] = ta.trend.ADXIndicator(df['high'], df['low'], df['close'], window=14, fillna=True).adx_pos()
+#     df['di_minus'] = ta.trend.ADXIndicator(df['high'], df['low'], df['close'], window=14, fillna=True).adx_neg()
 
-    return df
+#     return df
 app = dash.Dash(__name__)
 server = app.server
 
@@ -527,7 +527,7 @@ def update_graph_callback(n, relayoutData, selected_timeframe, selected_candle_t
     resampled_data = resampled_data.dropna()
 
     # Calculate ADX for the resampled data
-    adx_data = calculate_adx(resampled_data)
+    # adx_data = calculate_adx(resampled_data)
 
     # Create normal candlestick figure
     normal_candlestick_fig = go.Figure(data=[go.Candlestick(x=resampled_data.index,
@@ -560,34 +560,35 @@ def update_graph_callback(n, relayoutData, selected_timeframe, selected_candle_t
         heikin_ashi_fig = go.Figure()
 
     # Create ADX figure
-    adx_fig = go.Figure(data=[go.Scatter(x=adx_data.index, y=adx_data['adx'], mode='lines', name='ADX')])
-    # Add +DI trace
-    adx_fig.add_trace(go.Scatter(x=adx_data.index, y=adx_data['di_plus'], mode='lines', name='+DI', line=dict(color='green')))
+    # adx_fig = go.Figure(data=[go.Scatter(x=adx_data.index, y=adx_data['adx'], mode='lines', name='ADX')])
+    # # Add +DI trace
+    # adx_fig.add_trace(go.Scatter(x=adx_data.index, y=adx_data['di_plus'], mode='lines', name='+DI', line=dict(color='green')))
 
-    # Add -DI trace
-    adx_fig.add_trace(go.Scatter(x=adx_data.index, y=adx_data['di_minus'], mode='lines', name='-DI', line=dict(color='red')))
-    adx_fig.update_xaxes(type='category', tickformat='%H:%M')
-    adx_fig.update_layout(title=f'Average Directional Index (ADX) ({selected_timeframe})',
-                                  xaxis_title='Time',
-                                  yaxis_title='ADX Value',
-                                  template='plotly')
+    # # Add -DI trace
+    # adx_fig.add_trace(go.Scatter(x=adx_data.index, y=adx_data['di_minus'], mode='lines', name='-DI', line=dict(color='red')))
+    # adx_fig.update_xaxes(type='category', tickformat='%H:%M')
+    # adx_fig.update_layout(title=f'Average Directional Index (ADX) ({selected_timeframe})',
+    #                               xaxis_title='Time',
+    #                               yaxis_title='ADX Value',
+    #                               template='plotly')
     
-    heikin_ashi_adx_data = calculate_he_adx(resampled_data)
+    # heikin_ashi_adx_data = calculate_he_adx(resampled_data)
 
     # Create Heikin Ashi ADX figure
-    heikin_ashi_adx_fig = go.Figure(data=[
-    go.Scatter(x=heikin_ashi_adx_data.index, y=heikin_ashi_adx_data['adx'], mode='lines', name='ADX', line=dict(color='blue')),
-    go.Scatter(x=heikin_ashi_adx_data.index, y=heikin_ashi_adx_data['plus_di'], mode='lines', name='+DI', line=dict(color='green')),
-    go.Scatter(x=heikin_ashi_adx_data.index, y=heikin_ashi_adx_data['minus_di'], mode='lines', name='-DI', line=dict(color='red'))
-])
+#     heikin_ashi_adx_fig = go.Figure(data=[
+#     go.Scatter(x=heikin_ashi_adx_data.index, y=heikin_ashi_adx_data['adx'], mode='lines', name='ADX', line=dict(color='blue')),
+#     go.Scatter(x=heikin_ashi_adx_data.index, y=heikin_ashi_adx_data['plus_di'], mode='lines', name='+DI', line=dict(color='green')),
+#     go.Scatter(x=heikin_ashi_adx_data.index, y=heikin_ashi_adx_data['minus_di'], mode='lines', name='-DI', line=dict(color='red'))
+# ])
 
-    heikin_ashi_adx_fig.update_xaxes(type='category', tickformat='%H:%M')
-    heikin_ashi_adx_fig.update_layout(title=f'Heikin Ashi Average Directional Index (ADX) ({selected_timeframe})',
-                                       xaxis_title='Time',
-                                       yaxis_title='ADX Value',
-                                       template='plotly')
+    # heikin_ashi_adx_fig.update_xaxes(type='category', tickformat='%H:%M')
+    # heikin_ashi_adx_fig.update_layout(title=f'Heikin Ashi Average Directional Index (ADX) ({selected_timeframe})',
+    #                                    xaxis_title='Time',
+    #                                    yaxis_title='ADX Value',
+    #                                    template='plotly')
 
-    return normal_candlestick_fig, heikin_ashi_fig, adx_fig, heikin_ashi_adx_fig
+    return normal_candlestick_fig, heikin_ashi_fig
+''', adx_fig , heikin_ashi_adx_fig'''
 
 
 if __name__ == '__main__':

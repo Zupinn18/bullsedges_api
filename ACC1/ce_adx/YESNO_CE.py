@@ -182,10 +182,15 @@ def calculate_heikin_ashi(data):
     no_confirmed = True  # Flag to track if "NO" has been confirmed
     # yes_updated = False
     label_data = []  # Create an empty list to store label data
+    last_yes_high = None  # Initialize last_yes_high outside the loop
+
+        
+    last_yes_high = None  # Initialize last_yes_high outside the loop
+
+    seven_updated = False  # Flag to track if 'seven' label is updated
 
     for i in range(1, len(ha_data)):  # Start from the second candle to check for green candles
-        if (ha_data['close'].iloc[i - 1] > ha_data['open'].iloc[i - 1] and
-                ha_data['close'].iloc[i] > ha_data['open'].iloc[i]):
+        if ha_data['close'].iloc[i - 1] > ha_data['open'].iloc[i - 1] and ha_data['close'].iloc[i] > ha_data['open'].iloc[i]:
             if consecutive_green_candles == 0:  # Only if not already counting green candles
                 consecutive_green_candles = 1  # Start counting green candles
                 prev_yes_open = data['open'].iloc[i]  # Update previous "YES" open value
@@ -193,12 +198,15 @@ def calculate_heikin_ashi(data):
 
                 ha_data.at[ha_data.index[i], 'mark'] = 'YES'
                 label_data.append(('YES', ha_data.index[i], data['open'].iloc[i], None))
-                # Check if the current closing price is 7 points higher than the previous "YES" high
-                if prev_green_high is not None and data['high'].iloc[i] > ha_data['high'].iloc[i - 1] + 7:
-                    label_data.append(('seven', ha_data.index[i], data['high'].iloc[i], None))
+                last_yes_high = ha_data['open'].iloc[i]  # Update last_yes_high
 
-        elif (ha_data['close'].iloc[i - 1] > ha_data['open'].iloc[i - 1] and
-            ha_data['close'].iloc[i] < ha_data['open'].iloc[i]):
+                # Check if the current candle's high is 7 points greater than the high of the last "YES" candle
+                if last_yes_high is not None and ha_data['high'].iloc[i] > last_yes_high + 7:
+                    ha_data.at[ha_data.index[i], 'mark'] = 'seven'
+                    label_data.append(('seven', ha_data.index[i], ha_data['high'].iloc[i], None))
+                    seven_updated = True  # Set the flag to True
+
+        elif ha_data['close'].iloc[i - 1] > ha_data['open'].iloc[i - 1] and ha_data['close'].iloc[i] < ha_data['open'].iloc[i]:
             # Check if the previous candle was green
             if consecutive_green_candles > 0:
                 if no_confirmed:  # Only update if "NO" is confirmed
@@ -214,12 +222,8 @@ def calculate_heikin_ashi(data):
                         if i + 1 < len(ha_data) and ha_data['close'].iloc[i + 1] < ha_data['open'].iloc[i + 1]:
                             label_data.append(('RED', ha_data.index[i + 1], ha_data['close'].iloc[i + 1], None))
                         else:
-                            # Check if the current candle is the first red candle after the green one that went 7 points up
-                            if i + 1 < len(ha_data) and ha_data['close'].iloc[i + 1] > ha_data['open'].iloc[i + 1] + 7:
-                                label_data.append(('seven', ha_data.index[i + 1], data['high'].iloc[i + 1], None))
-                            else:
-                                ha_data.at[ha_data.index[i], 'mark'] = ''
-                                print("Warning: No second red candle yet, skipping difference calculation")
+                            ha_data.at[ha_data.index[i], 'mark'] = ''
+                            print("Warning: No second red candle yet, skipping difference calculation")
                     else:
                         ha_data.at[ha_data.index[i], 'mark'] = ''
                         print("Warning: prev_yes_open is None, skipping difference calculation")
@@ -229,8 +233,14 @@ def calculate_heikin_ashi(data):
 
                 no_confirmed = True  # "NO" is confirmed
                 consecutive_green_candles = 0  # Reset consecutive_green_candles
+                last_yes_high = None  # Reset last_yes_high to None
 
-
+        # Check if the current candle is green and its high is 7 points greater than the high of the last "YES" candle
+        if not seven_updated and ha_data.at[ha_data.index[i], 'mark'] != 'seven':  # If 'seven' label is not updated yet
+            if last_yes_high is not None and ha_data['high'].iloc[i] > last_yes_high + 7:
+                ha_data.at[ha_data.index[i], 'mark'] = 'seven'
+                label_data.append(('seven', ha_data.index[i], ha_data['high'].iloc[i], None))
+                seven_updated = True  # Set the flag to True
 
     # Calculate the difference and add it to the DataFrame
     ha_data['Difference'] = ha_data['open'] - ha_data['close']
@@ -246,6 +256,7 @@ def calculate_heikin_ashi(data):
         print(f'Error saving labels: {e}')
 
     return ha_data
+
 
 
 # def calculate_he_adx(data, period=14):

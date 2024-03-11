@@ -13,7 +13,7 @@ alice = Aliceblue(user_id=user_id, api_key=api_key)
 print(alice.get_session_id())
 
 # Path to the CSV files
-label_csv_file_path = 'label_39321PE.csv'
+label_csv_file_path = 'label_41913PE.csv'
 # adx_csv_file_path = 'adx_PE_data.csv'
 
 # Initialize the state variable
@@ -30,7 +30,7 @@ def place_buy_order():
     print("Placing a Buy order...")
     print(alice.place_order(
         transaction_type=TransactionType.Buy,
-        instrument=alice.get_instrument_by_token('NFO', 39321),
+        instrument=alice.get_instrument_by_token('NFO', 41913),
         quantity=15,
         order_type=OrderType.Market,
         product_type=ProductType.Intraday,
@@ -52,7 +52,7 @@ def place_sell_order():
         print("Placing a Sell order...")
         print(alice.place_order(
             transaction_type=TransactionType.Sell,
-            instrument=alice.get_instrument_by_token('NFO', 39321),
+            instrument=alice.get_instrument_by_token('NFO', 41913),
             quantity=15,
             order_type=OrderType.Market,
             product_type=ProductType.Intraday,

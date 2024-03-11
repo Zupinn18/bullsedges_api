@@ -198,12 +198,12 @@ def calculate_heikin_ashi(data):
 
                 ha_data.at[ha_data.index[i], 'mark'] = 'YES'
                 label_data.append(('YES', ha_data.index[i], data['open'].iloc[i], None))
-                last_yes_high = ha_data['open'].iloc[i]  # Update last_yes_high
+                last_yes_high = ha_data['high'].iloc[i]  # Update last_yes_high
 
                 # Check if the current candle's high is 7 points greater than the high of the last "YES" candle
                 if last_yes_high is not None and data['high'].iloc[i] > last_yes_high + 7:
                     ha_data.at[ha_data.index[i], 'mark'] = 'seven'
-                    label_data.append(('seven', ha_data.index[i], ha_data['high'].iloc[i], None))
+                    label_data.append(('seven', ha_data.index[i], data['high'].iloc[i], None))
                     seven_updated = True  # Set the flag to True
 
         elif ha_data['close'].iloc[i - 1] > ha_data['open'].iloc[i - 1] and ha_data['close'].iloc[i] < ha_data['open'].iloc[i]:

@@ -1,34 +1,60 @@
 Timestamp,Level,Message
-2024-03-05 06:44:02,INFO,State: Waiting for yes and conditions met
-2024-03-05 06:44:02,INFO,Buy order placed...
-2024-03-05 06:44:02,INFO,Waiting for action...
-2024-03-05 06:44:02,INFO,Yes order executed...
-2024-03-05 06:44:03,INFO,State: Waiting for action
-2024-03-05 06:44:04,INFO,State: Waiting for action
-2024-03-05 06:44:05,INFO,State: Waiting for action
-2024-03-05 06:44:06,INFO,State: Waiting for action
-2024-03-05 06:44:07,INFO,State: Waiting for action
-2024-03-05 06:44:08,INFO,State: Waiting for action
-2024-03-05 06:44:09,INFO,State: Waiting for action
-2024-03-05 06:44:10,INFO,State: Waiting for action
-2024-03-05 06:44:11,INFO,State: Waiting for action
-2024-03-05 06:44:12,INFO,State: Waiting for action
-2024-03-05 06:44:13,INFO,State: Waiting for action
-2024-03-05 06:44:14,INFO,State: Waiting for action
-2024-03-05 06:44:15,INFO,State: Waiting for action
-2024-03-05 06:44:16,INFO,State: Waiting for action
-2024-03-05 06:44:17,INFO,State: Waiting for action
-2024-03-05 06:44:18,INFO,State: Waiting for action
-2024-03-05 06:44:19,INFO,State: Waiting for action
-2024-03-05 06:44:20,INFO,State: Waiting for action
-2024-03-05 06:44:21,INFO,State: Waiting for action
-2024-03-05 06:44:22,INFO,State: Waiting for action
-2024-03-05 06:44:23,INFO,State: Waiting for action
-2024-03-05 06:44:24,INFO,State: Waiting for action
-2024-03-05 06:44:25,INFO,State: Waiting for action
-2024-03-05 06:44:26,INFO,State: Waiting for action
-2024-03-05 06:44:27,INFO,State: Waiting for action
-2024-03-05 06:44:28,INFO,State: Waiting for action
-2024-03-05 06:44:29,INFO,State: Waiting for action
-2024-03-05 06:44:30,INFO,State: Waiting for action
-2024-03-05 06:44:31,INFO,State: Waiting for action
+2024-03-12 04:28:02,INFO,State: Waiting for yes and conditions met
+2024-03-12 04:28:02,INFO,Buy order placed...
+2024-03-12 04:28:02,INFO,Waiting for action...
+2024-03-12 04:28:02,INFO,Yes order executed...
+2024-03-12 04:28:04,INFO,State: Waiting for action
+2024-03-12 04:28:05,INFO,State: Waiting for action
+2024-03-12 04:28:06,INFO,State: Waiting for action
+2024-03-12 04:28:07,INFO,State: Waiting for action
+2024-03-12 04:28:08,INFO,State: Waiting for action
+2024-03-12 04:28:09,INFO,State: Waiting for action
+2024-03-12 04:28:10,INFO,State: Waiting for action
+2024-03-12 04:28:11,INFO,State: Waiting for action
+2024-03-12 04:28:12,INFO,State: Waiting for action
+2024-03-12 04:28:13,INFO,State: Waiting for action
+2024-03-12 04:28:14,INFO,State: Waiting for action
+2024-03-12 04:28:15,INFO,State: Waiting for action
+2024-03-12 04:28:16,INFO,State: Waiting for action
+2024-03-12 04:28:17,INFO,State: Waiting for action
+2024-03-12 04:28:18,INFO,State: Waiting for action
+2024-03-12 04:28:19,INFO,State: Waiting for action
+2024-03-12 04:28:20,INFO,State: Waiting for action
+2024-03-12 04:28:21,INFO,State: Waiting for action
+2024-03-12 04:28:22,INFO,State: Waiting for action
+2024-03-12 04:28:23,INFO,State: Waiting for action
+2024-03-12 04:28:24,INFO,State: Waiting for action
+2024-03-12 04:28:25,INFO,State: Waiting for action
+2024-03-12 04:28:26,INFO,State: Waiting for action
+2024-03-12 04:28:27,INFO,State: Waiting for action
+2024-03-12 04:28:28,INFO,State: Waiting for action
+2024-03-12 04:28:29,INFO,State: Waiting for action
+2024-03-12 04:28:30,INFO,State: Waiting for action
+2024-03-12 04:28:31,INFO,State: Waiting for action
+2024-03-12 04:28:32,INFO,State: Waiting for action
+2024-03-12 04:28:33,INFO,State: Waiting for action
+2024-03-12 04:28:34,INFO,State: Waiting for action
+2024-03-12 04:28:35,INFO,State: Waiting for action
+2024-03-12 04:28:36,INFO,State: Waiting for action
+2024-03-12 04:28:37,INFO,State: Waiting for action
+2024-03-12 04:28:38,INFO,State: Waiting for action
+2024-03-12 04:28:39,INFO,State: Waiting for action
+2024-03-12 04:28:40,INFO,State: Waiting for action
+2024-03-12 04:28:41,INFO,State: Waiting for action
+2024-03-12 04:28:42,INFO,State: Waiting for action
+2024-03-12 04:28:43,INFO,State: Waiting for action
+2024-03-12 04:28:44,INFO,State: Waiting for action
+2024-03-12 04:28:45,INFO,State: Waiting for action
+2024-03-12 04:28:46,INFO,State: Waiting for action
+2024-03-12 04:28:47,INFO,State: Waiting for action
+2024-03-12 04:28:48,INFO,State: Waiting for action
+2024-03-12 04:28:49,INFO,State: Waiting for action
+2024-03-12 04:28:50,INFO,State: Waiting for action
+2024-03-12 04:28:51,INFO,State: Waiting for action
+2024-03-12 04:28:52,INFO,State: Waiting for action
+2024-03-12 04:28:53,INFO,State: Waiting for action
+2024-03-12 04:28:54,INFO,State: Waiting for action
+2024-03-12 04:28:55,INFO,State: Waiting for action
+2024-03-12 04:28:56,INFO,State: Waiting for action
+2024-03-12 04:28:57,INFO,State: Waiting for action
+2024-03-12 04:28:57,INFO,"Sell order executed, market hit 7+ points"

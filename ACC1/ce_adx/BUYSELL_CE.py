@@ -13,7 +13,7 @@ alice = Aliceblue(user_id=user_id, api_key=api_key)
 print(alice.get_session_id())
 
 # Path to the CSV files
-label_csv_file_path = 'label_41370CE.csv'
+label_csv_file_path = 'label_41370_CE.csv'
 # adx_csv_file_path = 'adx_CE_data.csv'
 
 # Initialize the state variable

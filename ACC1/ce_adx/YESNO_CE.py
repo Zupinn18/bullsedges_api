@@ -194,18 +194,21 @@ def calculate_heikin_ashi(data):
                 ha_data.at[ha_data.index[i], 'mark'] = 'YES'
                 label_data.append(('YES', ha_data.index[i], data['open'].iloc[i], None))
                 last_yes_high = data['open'].iloc[i]
-
+                trade_book_data = alice.get_trade_book()
                 # Fetch the data from trade book and check for 'seven' label update
-                trade_book_data = pd.read_csv('trade_book_ce.csv')  # Assuming 'trade_book.csv' contains the trade book data
-                if not trade_book_data.empty:
-                    last_updated_price = float(trade_book_data['Price'].iloc[-1])
+                update_label_trade_book(trade_book_data)  # Pass trade_book_data to the update_label_trade_book function
+
+                trade_book = pd.read_csv('trade_book_ce.csv')  # Assuming 'trade_book.csv' contains the trade book data
+                
+                if not trade_book.empty:
+                    last_updated_price = float(trade_book['Price'].iloc[-1])
                     if data['high'].iloc[i] > last_updated_price + 7:
                         ha_data.at[ha_data.index[i], 'mark'] = 'seven'
                         label_data.append(('seven', ha_data.index[i], data['high'].iloc[i], None))
                         seven_updated = True
                     else:
                         seven_updated = False
-
+                
         elif ha_data['close'].iloc[i - 1] > ha_data['open'].iloc[i - 1] and ha_data['close'].iloc[i] < ha_data['open'].iloc[i]:
             if consecutive_green_candles > 0:
                 if no_confirmed:
@@ -219,9 +222,10 @@ def calculate_heikin_ashi(data):
                     last_yes_high = None
 
         if not seven_updated and ha_data.at[ha_data.index[i], 'mark'] != 'seven':
-            if last_yes_high is not None and data['high'].iloc[i] > last_updated_price + 7:
-                ha_data.at[ha_data.index[i], 'mark'] = 'seven'
-                label_data.append(('seven', ha_data.index[i], data['high'].iloc[i], None))
+            if last_yes_high is not None and last_updated_price is not None:
+                if data['high'].iloc[i] > last_updated_price + 7:
+                    ha_data.at[ha_data.index[i], 'mark'] = 'seven'
+                    label_data.append(('seven', ha_data.index[i], data['high'].iloc[i], None))
 
     ha_data['Difference'] = ha_data['open'] - ha_data['close']
 

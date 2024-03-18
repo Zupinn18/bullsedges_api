@@ -28,7 +28,7 @@ from ta.utils import dropna
 # Replace these with your actual MongoDB connection details
 MONGO_CONNECTION_STRING = "mongodb://localhost:27017/"
 DB_NAME = "banknifty"
-COLLECTION_NAME = "41345CE"
+COLLECTION_NAME = "41345_PE"
 
 client = MongoClient(MONGO_CONNECTION_STRING)
 db = client[DB_NAME]
@@ -53,9 +53,9 @@ unsubscribe_list = []
 data_list = []  # List to store the received data
 df = pd.DataFrame(columns=["timestamp", "lp"])  # Initialize an empty DataFrame for storing the data
 # File paths for saving data and graph
-data_file_path = "41345CE.csv"
+data_file_path = "41345PE.csv"
 
-graph_file_path = "41345CE.html"
+graph_file_path = "41345PE.html"
 
 # Check if the data file exists
 if os.path.exists(data_file_path):
@@ -181,6 +181,7 @@ def calculate_heikin_ashi(data):
     prev_green_high = None 
     no_confirmed = True
     last_yes_high = None
+    last_updated_price = None  # Initialize last_updated_price here
 
     for i in range(1, len(ha_data)):
         seven_updated = False
@@ -198,7 +199,7 @@ def calculate_heikin_ashi(data):
                 # Fetch the data from trade book and check for 'seven' label update
                 update_label_trade_book(trade_book_data)  # Pass trade_book_data to the update_label_trade_book function
 
-                trade_book = pd.read_csv('trade_book_ce.csv')  # Assuming 'trade_book.csv' contains the trade book data
+                trade_book = pd.read_csv('trade_book_pe.csv')  # Assuming 'trade_book.csv' contains the trade book data
                 
                 if not trade_book.empty:
                     last_updated_price = float(trade_book['Price'].iloc[-1])
@@ -263,6 +264,7 @@ def update_label_trade_book(trade_book_data):
 
 
 '''old heikin ashi code without tradebook'''
+
 # def calculate_heikin_ashi(data):
 #     ha_open = 0.5 * (data['open'].shift() + data['close'].shift())
 #     ha_close = 0.25 * (data['open'] + data['high'] + data['low'] + data['close'])
@@ -355,7 +357,7 @@ def update_label_trade_book(trade_book_data):
 #     # Calculate the difference and add it to the DataFrame
 #     ha_data['Difference'] = ha_data['open'] - ha_data['close']
 
-#     label_csv_filename = 'label_41345CE.csv'
+#     label_csv_filename = 'label_41345PE.csv'
 #     try:
 #         with open(label_csv_filename, 'w', newline='') as csv_file:
 #             csv_writer = csv.writer(csv_file)
@@ -366,7 +368,6 @@ def update_label_trade_book(trade_book_data):
 #         print(f'Error saving labels: {e}')
 
 #     return ha_data
-
 
 
 # def calculate_he_adx(data, period=14):
@@ -391,7 +392,7 @@ def update_label_trade_book(trade_book_data):
 #     adx_cross_data.loc[adx_cross_data['plus_di'] > adx_cross_data['minus_di'], '-di_color'] = 'down'
 
 #     # Save data to CSV file
-#     adx_cross_data.to_csv('adx_CE_data.csv', index_label='timestamp')
+#     adx_cross_data.to_csv('adx_PE_data.csv', index_label='timestamp')
 
 #     return adx_cross_data[['adx', 'plus_di', 'minus_di']]
 
@@ -634,6 +635,7 @@ def update_graph_callback(n, relayoutData, selected_timeframe, selected_candle_t
     df = df.dropna(subset=['lp'])
 
     # Handle xaxis range if available in relayoutData
+    # Handle xaxis range if available in relayoutData
     if 'xaxis.range' in relayoutData:
         xaxis_range = relayoutData['xaxis.range']
     else:
@@ -712,7 +714,7 @@ def update_graph_callback(n, relayoutData, selected_timeframe, selected_candle_t
     #                                    template='plotly')
 
     return normal_candlestick_fig, heikin_ashi_fig
-# , adx_fig, heikin_ashi_adx_fig
+''', adx_fig , heikin_ashi_adx_fig'''
 
 
 if __name__ == '__main__':

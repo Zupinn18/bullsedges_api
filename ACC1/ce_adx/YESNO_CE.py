@@ -243,19 +243,23 @@ def calculate_heikin_ashi(data):
     return ha_data
 
 
+
 def update_label_trade_book(trade_book_data):
-    # Code to update label trade book
-    label_trade_book_filename = 'trade_book_ce.csv'
-    try:
-        with open(label_trade_book_filename, 'w', newline='') as csv_file:
-            csv_writer = csv.DictWriter(csv_file, fieldnames=trade_book_data[0].keys())
+    label_trade_book_filename = 'trade_book_pe.csv'
+
+    # Check if the file already exists
+    if not os.path.isfile(label_trade_book_filename):
+        with open(label_trade_book_filename, 'w', newline='') as new_csv_file:
+            csv_writer = csv.DictWriter(new_csv_file, fieldnames=trade_book_data[0].keys())
             csv_writer.writeheader()
+
+    try:
+        with open(label_trade_book_filename, 'a', newline='') as csv_file:
+            csv_writer = csv.DictWriter(csv_file, fieldnames=trade_book_data[0].keys())
             for entry in trade_book_data:
-                # Perform value updates if needed, otherwise keep the original values
-                # For example, if 'Price' needs to be updated, modify it here
-                if 'Price' in entry:  # Check if 'Price' key exists
-                    updated_price = float(entry['Price'])  # Incrementing 'Price' value by 1
-                    entry['Price'] = str(updated_price)  # Convert back to string after modification
+                if 'Price' in entry:
+                    updated_price = float(entry['Price'])
+                    entry['Price'] = str(updated_price)
                 csv_writer.writerow(entry)
 
         print(f'Label trade book updated and saved to {label_trade_book_filename}')

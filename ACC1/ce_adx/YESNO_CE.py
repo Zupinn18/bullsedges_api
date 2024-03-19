@@ -28,7 +28,7 @@ from ta.utils import dropna
 # Replace these with your actual MongoDB connection details
 MONGO_CONNECTION_STRING = "mongodb://localhost:27017/"
 DB_NAME = "banknifty"
-COLLECTION_NAME = "41345_PE"
+COLLECTION_NAME = "41345_CE"
 
 client = MongoClient(MONGO_CONNECTION_STRING)
 db = client[DB_NAME]
@@ -160,12 +160,12 @@ def calculate_heikin_ashi(data):
     ha_low = data[['low', 'open', 'close']].min(axis=1)
 
     ha_data = pd.DataFrame({'open': ha_open, 'high': ha_high, 'low': ha_low, 'close': ha_close})
-    
+
     for i in range(len(ha_data)):
         if i == 0:
             ha_data.iat[0, 0] = round(((data['open'].iloc[0] + data['close'].iloc[0]) / 2), 2)
         else:
-            ha_data.iat[i, 0] = round(((ha_data.iat[i-1, 0] + ha_data.iat[i-1, 3]) / 2), 2)
+            ha_data.iat[i, 0] = round(((ha_data.iat[i - 1, 0] + ha_data.iat[i - 1, 3]) / 2), 2)
 
     ha_data['high'] = ha_data[['high', 'open', 'close']].max(axis=1)
     ha_data['low'] = ha_data[['low', 'open', 'close']].min(axis=1)
@@ -199,7 +199,7 @@ def calculate_heikin_ashi(data):
                 # Fetch the data from trade book and check for 'seven' label update
                 update_label_trade_book(trade_book_data)  # Pass trade_book_data to the update_label_trade_book function
 
-                trade_book = pd.read_csv('trade_book_pe.csv')  # Assuming 'trade_book.csv' contains the trade book data
+                trade_book = pd.read_csv('trade_book_ce.csv')  # Assuming 'trade_book.csv' contains the trade book data
                 
                 if not trade_book.empty:
                     last_updated_price = float(trade_book['Price'].iloc[-1])
@@ -230,7 +230,7 @@ def calculate_heikin_ashi(data):
 
     ha_data['Difference'] = ha_data['open'] - ha_data['close']
 
-    label_csv_filename = 'label_41345_CE.csv'
+    label_csv_filename = 'label_41345_ce.csv'
     try:
         with open(label_csv_filename, 'w', newline='') as csv_file:
             csv_writer = csv.writer(csv_file)
@@ -245,7 +245,7 @@ def calculate_heikin_ashi(data):
 
 
 def update_label_trade_book(trade_book_data):
-    label_trade_book_filename = 'trade_book_pe.csv'
+    label_trade_book_filename = 'trade_book_ce.csv'
 
     # Check if the file already exists
     if not os.path.isfile(label_trade_book_filename):
@@ -254,19 +254,29 @@ def update_label_trade_book(trade_book_data):
             csv_writer.writeheader()
 
     try:
+        existing_entries = set()
+        if os.path.isfile(label_trade_book_filename):
+            # Read existing entries to avoid duplicates
+            with open(label_trade_book_filename, 'r') as existing_csv_file:
+                csv_reader = csv.DictReader(existing_csv_file)
+                for row in csv_reader:
+                    existing_entries.add(row['Timestamp'])
+
         with open(label_trade_book_filename, 'a', newline='') as csv_file:
             csv_writer = csv.DictWriter(csv_file, fieldnames=trade_book_data[0].keys())
             for entry in trade_book_data:
-                if 'Price' in entry:
-                    updated_price = float(entry['Price'])
-                    entry['Price'] = str(updated_price)
-                csv_writer.writerow(entry)
+                timestamp = entry.get('Timestamp')
+                if timestamp not in existing_entries:
+                    if 'Price' in entry:
+                        updated_price = float(entry['Price'])
+                        entry['Price'] = str(updated_price)
+                    csv_writer.writerow(entry)
+                    existing_entries.add(timestamp)
 
         print(f'Label trade book updated and saved to {label_trade_book_filename}')
     except Exception as e:
         print(f'Error updating label trade book: {e}')
-
-
+        
 '''old heikin ashi code without tradebook'''
 
 # def calculate_heikin_ashi(data):

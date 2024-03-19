@@ -31,7 +31,7 @@ def place_buy_order():
     print(alice.place_order(
         transaction_type=TransactionType.Buy,
         instrument=alice.get_instrument_by_token('NFO', 41336),
-        quantity=0,
+        quantity=15,
         order_type=OrderType.Market,
         product_type=ProductType.Intraday,
         price=0.0,
@@ -53,7 +53,7 @@ def place_sell_order():
         print(alice.place_order(
             transaction_type=TransactionType.Sell,
             instrument=alice.get_instrument_by_token('NFO', 41336),
-            quantity=0,
+            quantity=15,
             order_type=OrderType.Market,
             product_type=ProductType.Intraday,
             price=0.0,

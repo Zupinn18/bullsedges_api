@@ -160,6 +160,8 @@ print(datetime.now())
 sleep(10)
 print(datetime.now())
 
+
+
 def calculate_heikin_ashi(data):
     ha_open = 0.5 * (data['open'].shift() + data['close'].shift())
     ha_close = 0.25 * (data['open'] + data['high'] + data['low'] + data['close'])
@@ -204,14 +206,10 @@ def calculate_heikin_ashi(data):
                 last_yes_high = data['open'].iloc[i]
               
                 trade_book_data = alice.get_trade_book()
-                    # Convert trade_book_data to DataFrame
+                if trade_book_data and not isinstance(trade_book_data, dict):
+                    trade_book_data = {'Price': [trade_book_data]}  # Convert scalar value to list inside a dictionary
                 trade_book_df = pd.DataFrame(trade_book_data)
-                    # Save trade_book_df to CSV
                 trade_book_df.to_csv('trade_book_data.csv', index=False)
-                # print(trade_book_data)
-                # Fetch the data from trade book and check for 'seven' label update
-                # update_label_trade_book(trade_book_data)  # Pass trade_book_data to the update_label_trade_book function
-
                 trade_book = pd.read_csv('trade_book_data.csv')  # Assuming 'trade_book.csv' contains the trade book data
                 
                 if not trade_book.empty:
@@ -222,7 +220,9 @@ def calculate_heikin_ashi(data):
                         seven_updated = True
                     else:
                         seven_updated = False
-                
+                else:
+                    print("Trade book data is empty or not in the expected format.")
+
         elif ha_data['close'].iloc[i - 1] > ha_data['open'].iloc[i - 1] and ha_data['close'].iloc[i] < ha_data['open'].iloc[i]:
             if consecutive_green_candles > 0:
                 if no_confirmed:
@@ -254,7 +254,6 @@ def calculate_heikin_ashi(data):
         print(f'Error saving labels: {e}')
 
     return ha_data
-
 
 # def update_label_trade_book(trade_book_data):
 #     label_trade_book_filename = 'trade_book_ce.csv'

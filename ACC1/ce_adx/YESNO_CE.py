@@ -28,11 +28,17 @@ from ta.utils import dropna
 # Replace these with your actual MongoDB connection details
 MONGO_CONNECTION_STRING = "mongodb://localhost:27017/"
 DB_NAME = "banknifty"
-COLLECTION_NAME = "41345_CE"
+COLLECTION_NAME = "66690_ce"
 
 client = MongoClient(MONGO_CONNECTION_STRING)
 db = client[DB_NAME]
 collection = db[COLLECTION_NAME]
+# data_df = pd.read_csv('data.csv')
+# user_id = data_df['User ID'].iloc[-1]
+# api_key = data_df['API Key'].iloc[-1]
+# instrument_type = data_df['Instrument Type'].iloc[-1]
+# token_number = data_df['Token Number'].iloc[-1]
+
 
 # Define your AliceBlue user ID and API key
 user_id = 'AB093838'
@@ -44,7 +50,7 @@ alice = Aliceblue(user_id=user_id, api_key=api_key)
 # Print AliceBlue session ID
 print(alice.get_session_id())
 
-# Initialize variables for WebSocket communication
+# Initialize variables for WebSocket communicatdion
 lp = 0
 socket_opened = False
 subscribe_flag = False
@@ -53,13 +59,14 @@ unsubscribe_list = []
 data_list = []  # List to store the received data
 df = pd.DataFrame(columns=["timestamp", "lp"])  # Initialize an empty DataFrame for storing the data
 # File paths for saving data and graph
-data_file_path = "41345PE.csv"
+data_file_path = "66690PE.csv"
 
-graph_file_path = "41345PE.html"
+graph_file_path = "66690PE.html"
 
 # Check if the data file exists
 if os.path.exists(data_file_path):
     # Load existing data from the CSV file
+    
     df = pd.read_csv(data_file_path, index_col="timestamp", parse_dates=True)
 else:
     df = pd.DataFrame(columns=["timestamp", "lp"])  # Initialize an empty DataFrame for storing the data
@@ -147,7 +154,7 @@ while not socket_opened:
     pass
 
 # Subscribe to Tata Motors
-subscribe_list = [alice.get_instrument_by_token('NFO', 41345)]
+subscribe_list = [alice.get_instrument_by_token("NFO", 66690)]
 alice.subscribe(subscribe_list)
 print(datetime.now())
 sleep(10)
@@ -160,12 +167,12 @@ def calculate_heikin_ashi(data):
     ha_low = data[['low', 'open', 'close']].min(axis=1)
 
     ha_data = pd.DataFrame({'open': ha_open, 'high': ha_high, 'low': ha_low, 'close': ha_close})
-
+    
     for i in range(len(ha_data)):
         if i == 0:
             ha_data.iat[0, 0] = round(((data['open'].iloc[0] + data['close'].iloc[0]) / 2), 2)
         else:
-            ha_data.iat[i, 0] = round(((ha_data.iat[i - 1, 0] + ha_data.iat[i - 1, 3]) / 2), 2)
+            ha_data.iat[i, 0] = round(((ha_data.iat[i-1, 0] + ha_data.iat[i-1, 3]) / 2), 2)
 
     ha_data['high'] = ha_data[['high', 'open', 'close']].max(axis=1)
     ha_data['low'] = ha_data[['low', 'open', 'close']].min(axis=1)
@@ -195,11 +202,17 @@ def calculate_heikin_ashi(data):
                 ha_data.at[ha_data.index[i], 'mark'] = 'YES'
                 label_data.append(('YES', ha_data.index[i], data['open'].iloc[i], None))
                 last_yes_high = data['open'].iloc[i]
+              
                 trade_book_data = alice.get_trade_book()
+                    # Convert trade_book_data to DataFrame
+                trade_book_df = pd.DataFrame(trade_book_data)
+                    # Save trade_book_df to CSV
+                trade_book_df.to_csv('trade_book_data.csv', index=False)
+                # print(trade_book_data)
                 # Fetch the data from trade book and check for 'seven' label update
-                update_label_trade_book(trade_book_data)  # Pass trade_book_data to the update_label_trade_book function
+                # update_label_trade_book(trade_book_data)  # Pass trade_book_data to the update_label_trade_book function
 
-                trade_book = pd.read_csv('trade_book_ce.csv')  # Assuming 'trade_book.csv' contains the trade book data
+                trade_book = pd.read_csv('trade_book_data.csv')  # Assuming 'trade_book.csv' contains the trade book data
                 
                 if not trade_book.empty:
                     last_updated_price = float(trade_book['Price'].iloc[-1])
@@ -230,7 +243,7 @@ def calculate_heikin_ashi(data):
 
     ha_data['Difference'] = ha_data['open'] - ha_data['close']
 
-    label_csv_filename = 'label_41345_CE.csv'
+    label_csv_filename = 'label_66690_CE.csv'
     try:
         with open(label_csv_filename, 'w', newline='') as csv_file:
             csv_writer = csv.writer(csv_file)
@@ -243,346 +256,42 @@ def calculate_heikin_ashi(data):
     return ha_data
 
 
+# def update_label_trade_book(trade_book_data):
+#     label_trade_book_filename = 'trade_book_ce.csv'
 
-def update_label_trade_book(trade_book_data):
-    label_trade_book_filename = 'trade_book_ce.csv'
+#     # Check if the file already exists
+#     file_exists = os.path.isfile(label_trade_book_filename)
+#     if not file_exists:
+#         with open(label_trade_book_filename, 'w', newline='') as new_csv_file:
+#             csv_writer = csv.DictWriter(new_csv_file, fieldnames=trade_book_data[0].keys())
+#             csv_writer.writeheader()
 
-    # Check if the file already exists
-    if not os.path.isfile(label_trade_book_filename):
-        with open(label_trade_book_filename, 'w', newline='') as new_csv_file:
-            csv_writer = csv.DictWriter(new_csv_file, fieldnames=trade_book_data[0].keys())
-            csv_writer.writeheader()
-
-    try:
-        existing_entries = set()
-        if os.path.isfile(label_trade_book_filename):
-            # Read existing entries to avoid duplicates
-            with open(label_trade_book_filename, 'r') as existing_csv_file:
-                csv_reader = csv.DictReader(existing_csv_file)
-                for row in csv_reader:
-                    existing_entries.add(row['Timestamp'])
-
-        with open(label_trade_book_filename, 'a', newline='') as csv_file:
-            csv_writer = csv.DictWriter(csv_file, fieldnames=trade_book_data[0].keys())
-            for entry in trade_book_data:
-                timestamp = entry.get('Timestamp')
-                if timestamp not in existing_entries:
-                    if 'Price' in entry:
-                        updated_price = float(entry['Price'])
-                        entry['Price'] = str(updated_price)
-                    csv_writer.writerow(entry)
-                    existing_entries.add(timestamp)
-
-        print(f'Label trade book updated and saved to {label_trade_book_filename}')
-    except Exception as e:
-        print(f'Error updating label trade book: {e}')
-        
-'''old heikin ashi code without tradebook'''
-
-# def calculate_heikin_ashi(data):
-#     ha_open = 0.5 * (data['open'].shift() + data['close'].shift())
-#     ha_close = 0.25 * (data['open'] + data['high'] + data['low'] + data['close'])
-#     ha_high = data[['high', 'open', 'close']].max(axis=1)
-#     ha_low = data[['low', 'open', 'close']].min(axis=1)
-
-#     ha_data = pd.DataFrame({'open': ha_open, 'high': ha_high, 'low': ha_low, 'close': ha_close})
-    
-#     for i in range(len(ha_data)):
-#         if i == 0:
-#             ha_data.iat[0, 0] = round(((data['open'].iloc[0] + data['close'].iloc[0]) / 2), 2)
-#         else:
-#             ha_data.iat[i, 0] = round(((ha_data.iat[i-1, 0] + ha_data.iat[i-1, 3]) / 2), 2)
-
-#     ha_data['high'] = ha_data[['high', 'open', 'close']].max(axis=1)
-#     ha_data['low'] = ha_data[['low', 'open', 'close']].min(axis=1)
-#     ha_data['close'] = round(0.25 * (data['open'] + data['close'] + data['high'] + data['low']), 2)
-
-#     ha_data['mark'] = ''
-#     label_data = []
-
-#     # Initialize state
-#     consecutive_green_candles = 0
-#     prev_yes_open = None
-#     prev_green_low = None  # Track the low of the previous green candle
-#     prev_green_high = None 
-#     no_confirmed = True  # Flag to track if "NO" has been confirmed
-#     # yes_updated = False
-#     label_data = []  # Create an empty list to store label data
-#     last_yes_high = None  # Initialize last_yes_high outside the loop
-
-#     last_yes_high = None  # Initialize last_yes_high outside the loop
-
-#     for i in range(1, len(ha_data)):  # Start from the second candle to check for green candles
-#         seven_updated = False  # Reset the 'seven_updated' flag at the beginning of each iteration
-
-#         if ha_data['close'].iloc[i - 1] > ha_data['open'].iloc[i - 1] and ha_data['close'].iloc[i] > ha_data['open'].iloc[i]:
-#             if consecutive_green_candles == 0:  # Only if not already counting green candles
-#                 consecutive_green_candles = 1  # Start counting green candles
-#                 prev_yes_open = data['open'].iloc[i]  # Update previous "YES" open value
-#                 prev_green_high = ha_data['high'].iloc[i]  # Update the high of the previous green candle
-
-#                 ha_data.at[ha_data.index[i], 'mark'] = 'YES'
-#                 label_data.append(('YES', ha_data.index[i], data['open'].iloc[i], None))
-#                 last_yes_high = data['open'].iloc[i]  # Update last_yes_high
-
-#                 # Check if the current candle's high is 7 points greater than the high of the last "YES" candle
-#                 if last_yes_high is not None and data['high'].iloc[i] > last_yes_high + 7:
-#                     ha_data.at[ha_data.index[i], 'mark'] = 'seven'
-#                     label_data.append(('seven', ha_data.index[i], data['high'].iloc[i], None))
-#                     seven_updated = True  # Set the flag to True
-
-#         elif ha_data['close'].iloc[i - 1] > ha_data['open'].iloc[i - 1] and ha_data['close'].iloc[i] < ha_data['open'].iloc[i]:
-#             # Check if the previous candle was green
-#             if consecutive_green_candles > 0:
-#                 if no_confirmed:  # Only update if "NO" is confirmed
-#                     ha_data.at[ha_data.index[i], 'mark'] = 'NO'
-#                     if prev_yes_open is not None:
-#                         confirmed_no_closing = ha_data['close'].iloc[i]  # Store confirmed "NO" closing value
-#                         diff = prev_yes_open - confirmed_no_closing  # Corrected difference calculation
-#                         label_data.append(('NO', ha_data.index[i], confirmed_no_closing, diff))
-                        
-#                         if ha_data['close'].iloc[i] < ha_data['open'].iloc[i]:
-#                             prev_green_low = ha_data['low'].iloc[i]  # Update the low of the previous green candle
-
-#                         if i + 1 < len(ha_data) and ha_data['close'].iloc[i + 1] < ha_data['open'].iloc[i + 1]:
-#                             label_data.append(('RED', ha_data.index[i + 1], ha_data['close'].iloc[i + 1], None))
-#                         else:
-#                             ha_data.at[ha_data.index[i], 'mark'] = ''
-#                             print("Warning: No second red candle yet, skipping difference calculation")
-#                     else:
-#                         ha_data.at[ha_data.index[i], 'mark'] = ''
-#                         print("Warning: prev_yes_open is None, skipping difference calculation")
-#                 else:
-#                     ha_data.at[ha_data.index[i], 'mark'] = ''
-#                     print("Warning: NO not confirmed yet, skipping difference calculation")
-
-#                 no_confirmed = True  # "NO" is confirmed
-#                 consecutive_green_candles = 0  # Reset consecutive_green_candles
-#                 last_yes_high = None  # Reset last_yes_high to None
-
-#         # Check if the current candle is green and its high is 7 points greater than the high of the last "YES" candle
-#         if not seven_updated and ha_data.at[ha_data.index[i], 'mark'] != 'seven':  # If 'seven' label is not updated yet
-#             if last_yes_high is not None and data['high'].iloc[i] > last_yes_high + 7:
-#                 ha_data.at[ha_data.index[i], 'mark'] = 'seven'
-#                 label_data.append(('seven', ha_data.index[i], data['high'].iloc[i], None))
-#                 seven_updated = True  # Set the flag to True
-
-
-#     # Calculate the difference and add it to the DataFrame
-#     ha_data['Difference'] = ha_data['open'] - ha_data['close']
-
-#     label_csv_filename = 'label_41345PE.csv'
 #     try:
-#         with open(label_csv_filename, 'w', newline='') as csv_file:
-#             csv_writer = csv.writer(csv_file)
-#             csv_writer.writerow(['Label', 'Timestamp', 'Value', 'Difference'])
-#             csv_writer.writerows(label_data)
-#         print(f'Labels saved to {label_csv_filename}')
+#         with open(label_trade_book_filename, 'a', newline='') as csv_file:
+#             csv_writer = csv.DictWriter(csv_file, fieldnames=trade_book_data[0].keys())
+#             existing_data = set()
+#             if file_exists:
+#                 with open(label_trade_book_filename, 'r') as existing_file:
+#                     existing_reader = csv.DictReader(existing_file)
+#                     for row in existing_reader:
+#                         existing_data.add((row['Timestamp'], row['Price']))  # Assuming Timestamp and Price are the unique identifiers
+
+#             # Append new data if it doesn't already exist
+#             for entry in trade_book_data:
+#                 if 'Price' in entry:
+#                     updated_price = float(entry['Price'])
+#                     entry['Price'] = str(updated_price)
+#                 if ('Timestamp' in entry) and ('Price' in entry) and (entry['Timestamp'], entry['Price']) not in existing_data:
+#                     print(f'Writing to CSV: {entry}')  # Debugging statement
+#                     csv_writer.writerow(entry)
+
+#         print(f'Label trade book updated and saved to {label_trade_book_filename}')
+#     except FileNotFoundError as file_err:
+#         print(f'Error: {file_err}. File not found.')
 #     except Exception as e:
-#         print(f'Error saving labels: {e}')
-
-#     return ha_data
+#         print(f'Error updating label trade book: {e}')
 
 
-# def calculate_he_adx(data, period=14):
-#     ha_data = calculate_heikin_ashi(data)
-
-#     # Calculate ADX, +DI, and -DI using ta library
-#     adx_indicator = ta.trend.ADXIndicator(ha_data['high'], ha_data['low'], ha_data['close'], window=period, fillna=True)
-#     ha_data['adx'] = adx_indicator.adx()
-#     ha_data['plus_di'] = adx_indicator.adx_pos()
-#     ha_data['minus_di'] = adx_indicator.adx_neg()
-
-#     # Find the index where ADX first crosses 20
-#     idx = (ha_data['adx'] > 20).idxmax()
-
-#     # Extract relevant data
-#     adx_cross_data = ha_data.loc[idx:, ['adx', 'plus_di', 'minus_di']]
-
-#     # Determine color for +DI and -DI
-#     adx_cross_data['+di_color'] = 'up'
-#     adx_cross_data.loc[adx_cross_data['plus_di'] < adx_cross_data['minus_di'], '+di_color'] = 'down'
-#     adx_cross_data['-di_color'] = 'up'
-#     adx_cross_data.loc[adx_cross_data['plus_di'] > adx_cross_data['minus_di'], '-di_color'] = 'down'
-
-#     # Save data to CSV file
-#     adx_cross_data.to_csv('adx_PE_data.csv', index_label='timestamp')
-
-#     return adx_cross_data[['adx', 'plus_di', 'minus_di']]
-
-
-# Example usage:
-# filtered_data = calculate_he_adx(data)
-
-
-
-# def calculate_supertrend(data, atr_period=12, factor=2.0, multiplier=2.0):
-#     data = data.copy()  # Create a copy of the data DataFrame
-
-#     close = data['close']
-#     high = data['high']
-#     low = data['low']
-
-#     tr = pd.DataFrame()
-#     tr['h-l'] = high - low
-#     tr['h-pc'] = abs(high - close.shift())
-#     tr['l-pc'] = abs(low - close.shift())
-#     tr['tr'] = tr.max(axis=1)
-
-#     atr = tr['tr'].rolling(atr_period).mean()
-
-#     median_price = (high + low) / 2
-#     data['upper_band'] = median_price + (multiplier * atr)
-#     data['lower_band'] = median_price - (multiplier * atr)
-
-#     supertrend = pd.Series(index=data.index)
-#     direction = pd.Series(index=data.index)
-
-#     supertrend.iloc[0] = data['upper_band'].iloc[0]
-#     direction.iloc[0] = 1
-
-#     for i in range(1, len(data)):
-#         if close.iloc[i] > supertrend.iloc[i - 1]:
-#             supertrend.iloc[i] = max(data['lower_band'].iloc[i], supertrend.iloc[i - 1])
-#             direction.iloc[i] = 1
-#         else:
-#             supertrend.iloc[i] = min(data['upper_band'].iloc[i], supertrend.iloc[i - 1])
-#             direction.iloc[i] = -1
-
-#         # Start uptrend calculation anew whenever a new uptrend begins
-#         if direction.iloc[i] == 1 and direction.iloc[i - 1] != 1:
-#             supertrend.iloc[i] = data['lower_band'].iloc[i]
-
-#         # Start downtrend calculation anew whenever a new downtrend begins
-#         if direction.iloc[i] == -1 and direction.iloc[i - 1] != -1:
-#             supertrend.iloc[i] = data['upper_band'].iloc[i]
-
-#     data['supertrend'] = supertrend  # Add the 'supertrend' column to the data DataFrame
-#     data['direction'] = direction  # Add the 'direction' column to the data DataFrame
-
-#     return data[['open', 'high', 'low', 'close', 'supertrend', 'direction', 'lower_band', 'upper_band']]
-
-# def calculate_trend_lines(data):
-#     current_trend = None
-#     trend_start = None
-#     trend_lines = []
-
-#     for i in range(len(data)):
-#         current_signal = data.iloc[i]
-
-#         if current_trend is None:
-#             current_trend = current_signal['direction']
-#             trend_start = current_signal.name
-
-#         if current_trend != current_signal['direction']:
-#             if trend_start is not None:
-#                 trend_data = data.loc[trend_start:data.index[i - 1]]
-#                 if len(trend_data) > 1:
-#                     trend_lines.append((current_trend, trend_data))
-
-#             current_trend = current_signal['direction']
-#             trend_start = current_signal.name
-
-#     # Handle the last trend if it's still ongoing
-#     if trend_start is not None and trend_start != data.index[-1]:
-#         trend_data = data.loc[trend_start:]
-#         if len(trend_data) > 1:
-#             trend_lines.append((current_trend, trend_data))
-
-#     return trend_lines
-
-
-# all_trend_lines = []
-
-
-
-# # Function to update the graph
-
-# def calculate_current_trend_lines(data):
-#     current_trend = None
-#     in_trend = False
-#     trend_start = None
-#     trend_lines = []
-#     buy_signals = pd.DataFrame(columns=['supertrend', 'direction'])
-#     sell_signals = pd.DataFrame(columns=['supertrend', 'direction'])
-#     # band_data = pd.DataFrame(columns=['Timestamp', 'band_type', 'band_value'])
-
-#     for i in range(len(data)):
-#         current_signal = data.iloc[i]
-
-#         if current_trend is None:
-#             current_trend = current_signal['direction']
-#             in_trend = True
-#             trend_start = current_signal.name
-
-#         if current_trend != current_signal['direction']:
-#             if current_signal['direction'] == 1:
-#                 sell_signals = pd.concat([sell_signals, current_signal])
-#                 # band_data = pd.concat([band_data, pd.DataFrame({'Timestamp': [current_signal.name], 'band_type': ['lower_band'], 'band_value': [current_signal['lower_band']]}), pd.DataFrame({'Timestamp': [current_signal.name], 'band_type': ['upper_band'], 'band_value': [np.nan]})])
-#             else:
-#                 buy_signals = pd.concat([buy_signals, current_signal])
-#                 # band_data = pd.concat([band_data, pd.DataFrame({'Timestamp': [current_signal.name], 'band_type': ['upper_band'], 'band_value': [current_signal['upper_band']]}), pd.DataFrame({'Timestamp': [current_signal.name], 'band_type': ['lower_band'], 'band_value': [np.nan]})])
-
-#             if in_trend:
-#                 trend_data = data.loc[trend_start:data.index[i - 1]]
-
-#                 if len(trend_data) > 1:
-#                     trend_lines.append((current_trend, trend_data))
-
-#             else:
-#                 if current_signal['direction'] == 1 and current_trend == -1:
-#                     updated_trend_data = data.loc[trend_start:data.index[i]]
-#                     updated_supertrend_data = calculate_supertrend(updated_trend_data, factor=2.0)
-#                     current_signal['supertrend'] = updated_supertrend_data['supertrend'].iloc[-1]
-#                     current_signal['direction'] = updated_supertrend_data['direction'].iloc[-1]
-#                 elif current_signal['direction'] == -1 and current_trend == 1:
-#                     updated_trend_data = data.loc[trend_start:data.index[i]]
-#                     updated_supertrend_data = calculate_supertrend(updated_trend_data, factor=2.0)
-#                     current_signal['supertrend'] = updated_supertrend_data['supertrend'].iloc[-1]
-#                     current_signal['direction'] = updated_supertrend_data['direction'].iloc[-1]
-
-#             current_trend = current_signal['direction']
-#             in_trend = False
-
-#         if not in_trend:
-#             if current_trend == 1:
-#                 if not np.isnan(current_signal['upper_band']):
-#                     trend_start = current_signal.name
-#                     in_trend = True
-#             else:
-#                 if not np.isnan(current_signal['lower_band']):
-#                     trend_start = current_signal.name
-#                     in_trend = True
-
-#     if in_trend:
-#         trend_data = data.loc[trend_start:]
-
-#         if len(trend_data) > 1:
-#             first_high = trend_data['high'].iloc[0]
-#             last_close = trend_data['close'].iloc[-1]
-
-#     # Handle the continuation of uptrend without a change in direction
-#     if len(trend_lines) > 0 and data.index[-1] not in trend_lines[-1][1].index and trend_lines[-1][0] == 1:
-#         last_trend_type, last_trend_data = trend_lines[-1]
-#         continuation_data = data.loc[data.index > last_trend_data.index[-1]]
-#         if len(continuation_data) > 1:
-#             updated_trend_data = pd.concat([last_trend_data.iloc[:-1], continuation_data])
-#             updated_supertrend_data = calculate_supertrend(updated_trend_data, factor=2.0)
-#             continuation_data['supertrend'] = updated_supertrend_data['supertrend'].values[-len(continuation_data):]
-#             continuation_data['direction'] = updated_supertrend_data['direction'].values[-len(continuation_data):]
-#             trend_lines[-1] = (last_trend_type, updated_trend_data)
-
-#     # Save band_data to a single CSV file
-#     # band_data.to_csv('band_data_CE.csv', index=False)
-
-#     return trend_lines, buy_signals, sell_signals
-
-# def calculate_adx(df):
-#     df['adx'] = ta.trend.ADXIndicator(df['high'], df['low'], df['close'], window=14, fillna=True).adx()
-#     df['di_plus'] = ta.trend.ADXIndicator(df['high'], df['low'], df['close'], window=14, fillna=True).adx_pos()
-#     df['di_minus'] = ta.trend.ADXIndicator(df['high'], df['low'], df['close'], window=14, fillna=True).adx_neg()
-
-#     return df
 app = dash.Dash(__name__)
 server = app.server
 
@@ -698,34 +407,6 @@ def update_graph_callback(n, relayoutData, selected_timeframe, selected_candle_t
                                   template='plotly')
     else:
         heikin_ashi_fig = go.Figure()
-
-    # Create ADX figure
-    # adx_fig = go.Figure(data=[go.Scatter(x=adx_data.index, y=adx_data['adx'], mode='lines', name='ADX')])
-    # # Add +DI trace
-    # adx_fig.add_trace(go.Scatter(x=adx_data.index, y=adx_data['di_plus'], mode='lines', name='+DI', line=dict(color='green')))
-
-    # # Add -DI trace
-    # adx_fig.add_trace(go.Scatter(x=adx_data.index, y=adx_data['di_minus'], mode='lines', name='-DI', line=dict(color='red')))
-    # adx_fig.update_xaxes(type='category', tickformat='%H:%M')
-    # adx_fig.update_layout(title=f'Average Directional Index (ADX) ({selected_timeframe})',
-    #                               xaxis_title='Time',
-    #                               yaxis_title='ADX Value',
-    #                               template='plotly')
-    
-    # heikin_ashi_adx_data = calculate_he_adx(resampled_data)
-
-    # Create Heikin Ashi ADX figure
-#     heikin_ashi_adx_fig = go.Figure(data=[
-#     go.Scatter(x=heikin_ashi_adx_data.index, y=heikin_ashi_adx_data['adx'], mode='lines', name='ADX', line=dict(color='blue')),
-#     go.Scatter(x=heikin_ashi_adx_data.index, y=heikin_ashi_adx_data['plus_di'], mode='lines', name='+DI', line=dict(color='green')),
-#     go.Scatter(x=heikin_ashi_adx_data.index, y=heikin_ashi_adx_data['minus_di'], mode='lines', name='-DI', line=dict(color='red'))
-# ])
-
-    # heikin_ashi_adx_fig.update_xaxes(type='category', tickformat='%H:%M')
-    # heikin_ashi_adx_fig.update_layout(title=f'Heikin Ashi Average Directional Index (ADX) ({selected_timeframe})',
-    #                                    xaxis_title='Time',
-    #                                    yaxis_title='ADX Value',
-    #                                    template='plotly')
 
     return normal_candlestick_fig, heikin_ashi_fig
 ''', adx_fig , heikin_ashi_adx_fig'''

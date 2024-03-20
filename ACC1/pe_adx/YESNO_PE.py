@@ -28,7 +28,7 @@ from ta.utils import dropna
 # Replace these with your actual MongoDB connection details
 MONGO_CONNECTION_STRING = "mongodb://localhost:27017/"
 DB_NAME = "banknifty"
-COLLECTION_NAME = "41336_PE"
+COLLECTION_NAME = "66689_PE"
 
 client = MongoClient(MONGO_CONNECTION_STRING)
 db = client[DB_NAME]
@@ -53,7 +53,7 @@ unsubscribe_list = []
 data_list = []  # List to store the received data
 df = pd.DataFrame(columns=["timestamp", "lp"])  # Initialize an empty DataFrame for storing the data
 # File paths for saving data and graph
-data_file_path = "41336PE.csv"
+data_file_path = "66689PE.csv"
 
 graph_file_path = "41336PE.html"
 
@@ -147,12 +147,13 @@ while not socket_opened:
     pass
 
 # Subscribe to Tata Motors
-subscribe_list = [alice.get_instrument_by_token('NFO', 41336)]
+subscribe_list = [alice.get_instrument_by_token('NFO', 66689)]
 alice.subscribe(subscribe_list)
 print(datetime.now())
 sleep(10)
 print(datetime.now())
 last_updated_price = None
+
 def calculate_heikin_ashi(data):
     ha_open = 0.5 * (data['open'].shift() + data['close'].shift())
     ha_close = 0.25 * (data['open'] + data['high'] + data['low'] + data['close'])
@@ -160,12 +161,12 @@ def calculate_heikin_ashi(data):
     ha_low = data[['low', 'open', 'close']].min(axis=1)
 
     ha_data = pd.DataFrame({'open': ha_open, 'high': ha_high, 'low': ha_low, 'close': ha_close})
-
+    
     for i in range(len(ha_data)):
         if i == 0:
             ha_data.iat[0, 0] = round(((data['open'].iloc[0] + data['close'].iloc[0]) / 2), 2)
         else:
-            ha_data.iat[i, 0] = round(((ha_data.iat[i - 1, 0] + ha_data.iat[i - 1, 3]) / 2), 2)
+            ha_data.iat[i, 0] = round(((ha_data.iat[i-1, 0] + ha_data.iat[i-1, 3]) / 2), 2)
 
     ha_data['high'] = ha_data[['high', 'open', 'close']].max(axis=1)
     ha_data['low'] = ha_data[['low', 'open', 'close']].min(axis=1)
@@ -195,11 +196,17 @@ def calculate_heikin_ashi(data):
                 ha_data.at[ha_data.index[i], 'mark'] = 'YES'
                 label_data.append(('YES', ha_data.index[i], data['open'].iloc[i], None))
                 last_yes_high = data['open'].iloc[i]
+              
                 trade_book_data = alice.get_trade_book()
+                    # Convert trade_book_data to DataFrame
+                trade_book_df = pd.DataFrame(trade_book_data)
+                    # Save trade_book_df to CSV
+                trade_book_df.to_csv('trade_book_data.csv', index=False)
+                # print(trade_book_data)
                 # Fetch the data from trade book and check for 'seven' label update
-                update_label_trade_book(trade_book_data)  # Pass trade_book_data to the update_label_trade_book function
+                # update_label_trade_book(trade_book_data)  # Pass trade_book_data to the update_label_trade_book function
 
-                trade_book = pd.read_csv('trade_book_pe.csv')  # Assuming 'trade_book.csv' contains the trade book data
+                trade_book = pd.read_csv('trade_book_data.csv')  # Assuming 'trade_book.csv' contains the trade book data
                 
                 if not trade_book.empty:
                     last_updated_price = float(trade_book['Price'].iloc[-1])
@@ -230,7 +237,7 @@ def calculate_heikin_ashi(data):
 
     ha_data['Difference'] = ha_data['open'] - ha_data['close']
 
-    label_csv_filename = 'label_41336_pe.csv'
+    label_csv_filename = 'label_66689_PE.csv'
     try:
         with open(label_csv_filename, 'w', newline='') as csv_file:
             csv_writer = csv.writer(csv_file)
@@ -244,38 +251,39 @@ def calculate_heikin_ashi(data):
 
 
 
-def update_label_trade_book(trade_book_data):
-    label_trade_book_filename = 'trade_book_pe.csv'
 
-    # Check if the file already exists
-    if not os.path.isfile(label_trade_book_filename):
-        with open(label_trade_book_filename, 'w', newline='') as new_csv_file:
-            csv_writer = csv.DictWriter(new_csv_file, fieldnames=trade_book_data[0].keys())
-            csv_writer.writeheader()
+# def update_label_trade_book(trade_book_data):
+#     label_trade_book_filename = 'trade_book_pe.csv'
 
-    try:
-        existing_entries = set()
-        if os.path.isfile(label_trade_book_filename):
-            # Read existing entries to avoid duplicates
-            with open(label_trade_book_filename, 'r') as existing_csv_file:
-                csv_reader = csv.DictReader(existing_csv_file)
-                for row in csv_reader:
-                    existing_entries.add(row['Timestamp'])
+#     # Check if the file already exists
+#     if not os.path.isfile(label_trade_book_filename):
+#         with open(label_trade_book_filename, 'w', newline='') as new_csv_file:
+#             csv_writer = csv.DictWriter(new_csv_file, fieldnames=trade_book_data[0].keys())
+#             csv_writer.writeheader()
 
-        with open(label_trade_book_filename, 'a', newline='') as csv_file:
-            csv_writer = csv.DictWriter(csv_file, fieldnames=trade_book_data[0].keys())
-            for entry in trade_book_data:
-                timestamp = entry.get('Timestamp')
-                if timestamp not in existing_entries:
-                    if 'Price' in entry:
-                        updated_price = float(entry['Price'])
-                        entry['Price'] = str(updated_price)
-                    csv_writer.writerow(entry)
-                    existing_entries.add(timestamp)
+#     try:
+#         existing_entries = set()
+#         if os.path.isfile(label_trade_book_filename):
+#             # Read existing entries to avoid duplicates
+#             with open(label_trade_book_filename, 'r') as existing_csv_file:
+#                 csv_reader = csv.DictReader(existing_csv_file)
+#                 for row in csv_reader:
+#                     existing_entries.add(row['Timestamp'])
 
-        print(f'Label trade book updated and saved to {label_trade_book_filename}')
-    except Exception as e:
-        print(f'Error updating label trade book: {e}')
+#         with open(label_trade_book_filename, 'a', newline='') as csv_file:
+#             csv_writer = csv.DictWriter(csv_file, fieldnames=trade_book_data[0].keys())
+#             for entry in trade_book_data:
+#                 timestamp = entry.get('Timestamp')
+#                 if timestamp not in existing_entries:
+#                     if 'Price' in entry:
+#                         updated_price = float(entry['Price'])
+#                         entry['Price'] = str(updated_price)
+#                     csv_writer.writerow(entry)
+#                     existing_entries.add(timestamp)
+
+#         print(f'Label trade book updated and saved to {label_trade_book_filename}')
+#     except Exception as e:
+#         print(f'Error updating label trade book: {e}')
         
 
 '''old heikin ashi code without tradebook'''
@@ -372,7 +380,7 @@ def update_label_trade_book(trade_book_data):
 #     # Calculate the difference and add it to the DataFrame
 #     ha_data['Difference'] = ha_data['open'] - ha_data['close']
 
-#     label_csv_filename = 'label_41336PE.csv'
+#     label_csv_filename = 'label_66689PE.csv'
 #     try:
 #         with open(label_csv_filename, 'w', newline='') as csv_file:
 #             csv_writer = csv.writer(csv_file)

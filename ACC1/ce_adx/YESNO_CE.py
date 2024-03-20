@@ -208,18 +208,21 @@ def calculate_heikin_ashi(data):
                 trade_book_data = alice.get_trade_book()
                 if trade_book_data and not isinstance(trade_book_data, dict):
                     trade_book_data = {'Price': [trade_book_data]}  # Convert scalar value to list inside a dictionary
-                trade_book_df = pd.DataFrame(trade_book_data)
+                trade_book_df = pd.DataFrame(trade_book_data, index=[0])
                 trade_book_df.to_csv('trade_book_data.csv', index=False)
                 trade_book = pd.read_csv('trade_book_data.csv')  # Assuming 'trade_book.csv' contains the trade book data
                 
                 if not trade_book.empty:
-                    last_updated_price = float(trade_book['Price'].iloc[-1])
-                    if data['high'].iloc[i] > last_updated_price + 7:
-                        ha_data.at[ha_data.index[i], 'mark'] = 'seven'
-                        label_data.append(('seven', ha_data.index[i], data['high'].iloc[i], None))
-                        seven_updated = True
+                    if 'Price' in trade_book.columns:
+                        last_updated_price = float(trade_book['Price'].iloc[-1])
+                        if data['high'].iloc[i] > last_updated_price + 7:
+                            ha_data.at[ha_data.index[i], 'mark'] = 'seven'
+                            label_data.append(('seven', ha_data.index[i], data['high'].iloc[i], None))
+                            seven_updated = True
+                        else:
+                            seven_updated = False
                     else:
-                        seven_updated = False
+                        print("Column 'Price' not found in trade book data.")
                 else:
                     print("Trade book data is empty or not in the expected format.")
 
@@ -254,7 +257,6 @@ def calculate_heikin_ashi(data):
         print(f'Error saving labels: {e}')
 
     return ha_data
-
 # def update_label_trade_book(trade_book_data):
 #     label_trade_book_filename = 'trade_book_ce.csv'
 
@@ -412,4 +414,4 @@ def update_graph_callback(n, relayoutData, selected_timeframe, selected_candle_t
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server(debug=True, port=8004)

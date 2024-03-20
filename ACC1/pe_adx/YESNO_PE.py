@@ -152,10 +152,37 @@ alice.subscribe(subscribe_list)
 print(datetime.now())
 sleep(10)
 print(datetime.now())
-last_updated_price = None
+# last_updated_price = None
 
+
+
+def update_trade_book(trade_book_data, last_updated_price):
+    trade_book_csv_filename = 'trade_book.csv'
+    try:
+        trade_book_df = pd.read_csv(trade_book_csv_filename)  # Read the existing CSV file
+        existing_timestamps = set(trade_book_df['Filltime'])  # Get set of existing timestamps
+
+        new_data = [d for d in trade_book_data if d['Filltime'] not in existing_timestamps]  # Filter out existing data
+        if new_data:  # Check if there is new data to update
+            if not os.path.exists(trade_book_csv_filename) or os.path.getsize(trade_book_csv_filename) == 0:
+                with open(trade_book_csv_filename, 'w', newline='') as csv_file:
+                    csv_writer = csv.writer(csv_file)
+                    csv_writer.writerow(new_data[0].keys())  # Write headers
+
+            # Sort new_data based on timestamp in ascending order
+            new_data.sort(key=lambda x: x['Filltime'])
+
+            with open(trade_book_csv_filename, 'a', newline='') as csv_file:
+                csv_writer = csv.writer(csv_file)
+                csv_writer.writerows([d.values() for d in new_data])
+            # print(f'Trade book data updated in {trade_book_csv_filename}')
+        # else:
+            # print('No new data to fetch')
+    except Exception as e:
+        print(f'Error updating trade book data: {e}')
 
 def calculate_heikin_ashi(data):
+    global trade_book_data
     ha_open = 0.5 * (data['open'].shift() + data['close'].shift())
     ha_close = 0.25 * (data['open'] + data['high'] + data['low'] + data['close'])
     ha_high = data[['high', 'open', 'close']].max(axis=1)
@@ -184,41 +211,41 @@ def calculate_heikin_ashi(data):
     no_confirmed = True
     last_yes_high = None
     last_updated_price = None  # Initialize last_updated_price here
-
+   
+    trade_book_csv_filename = 'trade_book.csv'
+    try:
+        trade_book_df = pd.read_csv(trade_book_csv_filename)
+        last_row = trade_book_df.iloc[-1]  # Get the last row of the DataFrame
+        last_updated_price = last_row['Price']  # Assuming 'Price' is the column name
+        print(f'Last Updated Price: {last_updated_price}')  # Print last_updated_price
+    except Exception as e:
+        print(f'Error reading trade_book.csv: {e}')
+    
     for i in range(1, len(ha_data)):
         seven_updated = False
-
+        
         if ha_data['close'].iloc[i - 1] > ha_data['open'].iloc[i - 1] and ha_data['close'].iloc[i] > ha_data['open'].iloc[i]:
             if consecutive_green_candles == 0:
                 consecutive_green_candles = 1
                 prev_yes_open = data['open'].iloc[i]
                 prev_green_high = ha_data['high'].iloc[i]
-
+                
                 ha_data.at[ha_data.index[i], 'mark'] = 'YES'
                 label_data.append(('YES', ha_data.index[i], data['open'].iloc[i], None))
                 last_yes_high = data['open'].iloc[i]
-              
-                trade_book_data = alice.get_trade_book()
-                if trade_book_data and not isinstance(trade_book_data, dict):
-                    trade_book_data = {'Price': [trade_book_data]}  # Convert scalar value to list inside a dictionary
-                trade_book_df = pd.DataFrame(trade_book_data, index=[0])
-                trade_book_df.to_csv('trade_book_data.csv', index=False)
-                trade_book = pd.read_csv('trade_book_data.csv')  # Assuming 'trade_book.csv' contains the trade book data
-                
-                if not trade_book.empty:
-                    if 'Price' in trade_book.columns:
-                        last_updated_price = float(trade_book['Price'].iloc[-1])
-                        if data['high'].iloc[i] > last_updated_price + 7:
-                            ha_data.at[ha_data.index[i], 'mark'] = 'seven'
-                            label_data.append(('seven', ha_data.index[i], data['high'].iloc[i], None))
-                            seven_updated = True
-                        else:
-                            seven_updated = False
-                    else:
-                        print("Column 'Price' not found in trade book data.")
+                if last_yes_high is not None:
+                    update_trade_book(alice.get_trade_book(), last_updated_price)
                 else:
-                    print("Trade book data is empty or not in the expected format.")
+                    print("Waiting for new data before updating trade book.")
 
+                
+                if data['high'].iloc[i] > last_updated_price + 7:
+                    ha_data.at[ha_data.index[i], 'mark'] = 'seven'
+                    label_data.append(('seven', ha_data.index[i], data['high'].iloc[i], None))
+                    seven_updated = True
+                else:
+                    seven_updated = False
+                
         elif ha_data['close'].iloc[i - 1] > ha_data['open'].iloc[i - 1] and ha_data['close'].iloc[i] < ha_data['open'].iloc[i]:
             if consecutive_green_candles > 0:
                 if no_confirmed:
@@ -231,12 +258,12 @@ def calculate_heikin_ashi(data):
                     consecutive_green_candles = 0
                     last_yes_high = None
 
-        if not seven_updated and ha_data.at[ha_data.index[i], 'mark'] != 'seven':
-            if last_yes_high is not None and last_updated_price is not None:
+        if not seven_updated and last_updated_price is not None:
                 if data['high'].iloc[i] > last_updated_price + 7:
                     ha_data.at[ha_data.index[i], 'mark'] = 'seven'
                     label_data.append(('seven', ha_data.index[i], data['high'].iloc[i], None))
-
+                    seven_updated = True
+        
     ha_data['Difference'] = ha_data['open'] - ha_data['close']
 
     label_csv_filename = 'label_66689_PE.csv'
@@ -245,13 +272,12 @@ def calculate_heikin_ashi(data):
             csv_writer = csv.writer(csv_file)
             csv_writer.writerow(['Label', 'Timestamp', 'Value', 'Difference'])
             csv_writer.writerows(label_data)
-        print(f'Labels saved to {label_csv_filename}')
+        # print(f'Labels saved to {label_csv_filename}')
     except Exception as e:
         print(f'Error saving labels: {e}')
 
     return ha_data
-
-
+# convert_trade_book_data_to_csv(alice, output_file)
 # def update_label_trade_book(trade_book_data):
 #     label_trade_book_filename = 'trade_book_pe.csv'
 

@@ -158,16 +158,17 @@ print(datetime.now())
 
 def update_trade_book(trade_book_data, last_updated_price):
     trade_book_csv_filename = 'trade_book.csv'
+    if not os.path.exists(trade_book_csv_filename) or os.path.getsize(trade_book_csv_filename) == 0:
+                with open(trade_book_csv_filename, 'w', newline='') as csv_file:
+                    csv_writer = csv.writer(csv_file)
+                    csv_writer.writerow(new_data[0].keys())  # Write headers
     try:
         trade_book_df = pd.read_csv(trade_book_csv_filename)  # Read the existing CSV file
         existing_timestamps = set(trade_book_df['Filltime'])  # Get set of existing timestamps
 
         new_data = [d for d in trade_book_data if d['Filltime'] not in existing_timestamps]  # Filter out existing data
         if new_data:  # Check if there is new data to update
-            if not os.path.exists(trade_book_csv_filename) or os.path.getsize(trade_book_csv_filename) == 0:
-                with open(trade_book_csv_filename, 'w', newline='') as csv_file:
-                    csv_writer = csv.writer(csv_file)
-                    csv_writer.writerow(new_data[0].keys())  # Write headers
+            
 
             # Sort new_data based on timestamp in ascending order
             new_data.sort(key=lambda x: x['Filltime'])

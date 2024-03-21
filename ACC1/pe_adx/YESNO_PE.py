@@ -190,12 +190,12 @@ def calculate_heikin_ashi(data):
     ha_low = data[['low', 'open', 'close']].min(axis=1)
 
     ha_data = pd.DataFrame({'open': ha_open, 'high': ha_high, 'low': ha_low, 'close': ha_close})
-    
+
     for i in range(len(ha_data)):
         if i == 0:
             ha_data.iat[0, 0] = round(((data['open'].iloc[0] + data['close'].iloc[0]) / 2), 2)
         else:
-            ha_data.iat[i, 0] = round(((ha_data.iat[i-1, 0] + ha_data.iat[i-1, 3]) / 2), 2)
+            ha_data.iat[i, 0] = round(((ha_data.iat[i - 1, 0] + ha_data.iat[i - 1, 3]) / 2), 2)
 
     ha_data['high'] = ha_data[['high', 'open', 'close']].max(axis=1)
     ha_data['low'] = ha_data[['low', 'open', 'close']].min(axis=1)
@@ -208,11 +208,12 @@ def calculate_heikin_ashi(data):
     consecutive_green_candles = 0
     prev_yes_open = None
     prev_green_low = None
-    prev_green_high = None 
+    prev_green_high = None
     no_confirmed = True
     last_yes_high = None
     last_updated_price = None  # Initialize last_updated_price here
-   
+    seven_updated = False  # Flag to track if 'seven' label has been updated
+
     trade_book_csv_filename = 'trade_book_pe.csv'
     try:
         trade_book_df = pd.read_csv(trade_book_csv_filename)
@@ -220,17 +221,15 @@ def calculate_heikin_ashi(data):
         last_updated_price = last_row['Price']  # Assuming 'Price' is the column name
         print(f'Last Updated Price: {last_updated_price}')  # Print last_updated_price
     except Exception as e:
-        print(f'Error reading trade_book.csv: {e}')
-    
+        print(f'Error reading trade_book_ce.csv: {e}')
+
     for i in range(1, len(ha_data)):
-        seven_updated = False
-        
         if ha_data['close'].iloc[i - 1] > ha_data['open'].iloc[i - 1] and ha_data['close'].iloc[i] > ha_data['open'].iloc[i]:
             if consecutive_green_candles == 0:
                 consecutive_green_candles = 1
                 prev_yes_open = data['open'].iloc[i]
                 prev_green_high = ha_data['high'].iloc[i]
-                
+
                 ha_data.at[ha_data.index[i], 'mark'] = 'YES'
                 label_data.append(('YES', ha_data.index[i], data['open'].iloc[i], None))
                 last_yes_high = data['open'].iloc[i]
@@ -239,14 +238,12 @@ def calculate_heikin_ashi(data):
                 else:
                     print("Waiting for new data before updating trade book.")
 
-                
-                if data['high'].iloc[i] > last_updated_price + 7:
+                # Check if market goes 7 points up from last_updated_price and 'seven' label has not been updated
+                if data['high'].iloc[i] > last_updated_price + 7 and not seven_updated:
                     ha_data.at[ha_data.index[i], 'mark'] = 'seven'
                     label_data.append(('seven', ha_data.index[i], data['high'].iloc[i], None))
-                    seven_updated = True
-                else:
-                    seven_updated = False
-                
+                    seven_updated = True  # Set the flag to True since 'seven' label is updated
+
         elif ha_data['close'].iloc[i - 1] > ha_data['open'].iloc[i - 1] and ha_data['close'].iloc[i] < ha_data['open'].iloc[i]:
             if consecutive_green_candles > 0:
                 if no_confirmed:
@@ -260,11 +257,11 @@ def calculate_heikin_ashi(data):
                     last_yes_high = None
 
         if not seven_updated and last_updated_price is not None:
-                if data['high'].iloc[i] > last_updated_price + 7:
-                    ha_data.at[ha_data.index[i], 'mark'] = 'seven'
-                    label_data.append(('seven', ha_data.index[i], data['high'].iloc[i], None))
-                    seven_updated = True
-        
+            if data['high'].iloc[i] > last_updated_price + 7:
+                ha_data.at[ha_data.index[i], 'mark'] = 'seven'
+                label_data.append(('seven', ha_data.index[i], data['high'].iloc[i], None))
+                seven_updated = True  # Set the flag to True since 'seven' label is updated
+
     ha_data['Difference'] = ha_data['open'] - ha_data['close']
 
     label_csv_filename = 'label_66693_PE.csv'

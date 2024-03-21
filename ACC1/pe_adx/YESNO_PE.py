@@ -28,7 +28,7 @@ from ta.utils import dropna
 # Replace these with your actual MongoDB connection details
 MONGO_CONNECTION_STRING = "mongodb://localhost:27017/"
 DB_NAME = "banknifty"
-COLLECTION_NAME = "66689_PE"
+COLLECTION_NAME = "66693_PE"
 
 client = MongoClient(MONGO_CONNECTION_STRING)
 db = client[DB_NAME]
@@ -53,7 +53,7 @@ unsubscribe_list = []
 data_list = []  # List to store the received data
 df = pd.DataFrame(columns=["timestamp", "lp"])  # Initialize an empty DataFrame for storing the data
 # File paths for saving data and graph
-data_file_path = "66689PE.csv"
+data_file_path = "66693PE.csv"
 
 graph_file_path = "41336PE.html"
 
@@ -147,7 +147,7 @@ while not socket_opened:
     pass
 
 # Subscribe to Tata Motors
-subscribe_list = [alice.get_instrument_by_token('NFO', 66689)]
+subscribe_list = [alice.get_instrument_by_token('NFO', 66693)]
 alice.subscribe(subscribe_list)
 print(datetime.now())
 sleep(10)
@@ -157,7 +157,7 @@ print(datetime.now())
 
 
 def update_trade_book(trade_book_data, last_updated_price):
-    trade_book_csv_filename = 'trade_book.csv'
+    trade_book_csv_filename = 'trade_book_pe.csv'
     if not os.path.exists(trade_book_csv_filename) or os.path.getsize(trade_book_csv_filename) == 0:
                 with open(trade_book_csv_filename, 'w', newline='') as csv_file:
                     csv_writer = csv.writer(csv_file)
@@ -213,7 +213,7 @@ def calculate_heikin_ashi(data):
     last_yes_high = None
     last_updated_price = None  # Initialize last_updated_price here
    
-    trade_book_csv_filename = 'trade_book.csv'
+    trade_book_csv_filename = 'trade_book_pe.csv'
     try:
         trade_book_df = pd.read_csv(trade_book_csv_filename)
         last_row = trade_book_df.iloc[-1]  # Get the last row of the DataFrame
@@ -267,7 +267,7 @@ def calculate_heikin_ashi(data):
         
     ha_data['Difference'] = ha_data['open'] - ha_data['close']
 
-    label_csv_filename = 'label_66689_PE.csv'
+    label_csv_filename = 'label_66693_PE.csv'
     try:
         with open(label_csv_filename, 'w', newline='') as csv_file:
             csv_writer = csv.writer(csv_file)
@@ -407,7 +407,7 @@ def calculate_heikin_ashi(data):
 #     # Calculate the difference and add it to the DataFrame
 #     ha_data['Difference'] = ha_data['open'] - ha_data['close']
 
-#     label_csv_filename = 'label_66689PE.csv'
+#     label_csv_filename = 'label_66693PE.csv'
 #     try:
 #         with open(label_csv_filename, 'w', newline='') as csv_file:
 #             csv_writer = csv.writer(csv_file)

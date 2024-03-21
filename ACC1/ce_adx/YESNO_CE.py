@@ -273,7 +273,7 @@ def calculate_heikin_ashi(data):
         
     ha_data['Difference'] = ha_data['open'] - ha_data['close']
 
-    label_csv_filename = 'label_66609_CE.csv'
+    label_csv_filename = 'label_66696_CE.csv'
     try:
         with open(label_csv_filename, 'w', newline='') as csv_file:
             csv_writer = csv.writer(csv_file)
